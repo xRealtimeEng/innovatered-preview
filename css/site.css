@@ -338,6 +338,8 @@ body.assembled {
 .tech-receipt {
   margin: 0.25rem 0 0;
   max-width: 40rem;
+  min-width: 0;
+  width: 100%;
   padding: 1rem 1.1rem;
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -348,7 +350,8 @@ body.assembled {
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   line-height: 1.65;
-  white-space: pre;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 .tech-links {
   list-style: none;
