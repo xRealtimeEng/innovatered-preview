@@ -660,6 +660,9 @@ body.assembled {
   text-transform: uppercase;
   color: var(--muted);
 }
+.gallery-status.is-live { color: var(--red); }
+.gallery-card.is-live { border-color: rgba(200, 16, 46, 0.55); }
+.gallery-open { margin-top: auto; align-self: flex-start; width: fit-content; }
 .gallery-card h3 {
   margin: 0 0 0.55rem;
   color: var(--heading);
