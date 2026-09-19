@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RED · Team preview</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root { --red:#c8102e; --navy:#0b1c2d; --gold:#f2a900; --heading:#fff; --kicker:#d9d9d9; --muted:#a6a6a6; }
+      * { box-sizing: border-box; }
+      body { margin:0; font-family:Inter,system-ui,sans-serif; background:#0b1c2d; color:var(--kicker); line-height:1.55; }
+      header { position:sticky; top:0; z-index:10; display:flex; align-items:center; justify-content:space-between; gap:1rem; padding:.85rem 1.25rem; background:rgba(26,31,36,.94); border-bottom:1px solid rgba(200,16,46,.45); }
+      .brand { display:flex; align-items:center; gap:.7rem; color:#fff; font-weight:700; letter-spacing:.12em; text-decoration:none; }
+      .brand img { width:36px; height:36px; }
+      .note { font-size:.75rem; color:var(--gold); }
+      main { max-width:1120px; margin:0 auto; padding:2rem 1.25rem 4rem; }
+      .kicker { font-size:.7rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--gold); }
+      h1 { font-family:Cinzel,serif; color:#fff; font-size:2rem; margin:.35rem 0 .6rem; }
+      .lede { max-width:40rem; }
+      .grid { display:grid; gap:1.25rem; margin-top:1.75rem; }
+      @media (min-width:900px) { .grid { grid-template-columns:1fr 1fr; } }
+      .card { background:rgba(255,255,255,.08); border:1px solid rgba(200,16,46,.35); border-radius:4px; padding:1.15rem 1.2rem; }
+      .card h2 { margin:0 0 .3rem; color:#fff; font-size:1.25rem; }
+      .title { margin:0 0 .25rem; font-size:.9rem; }
+      .sub { margin:0 0 .8rem; font-size:.85rem; color:var(--muted); }
+      .avatar { width:72px; height:72px; border-radius:50%; object-fit:cover; border:2px solid rgba(200,16,46,.4); margin-bottom:.85rem; }
+      a { color:var(--kicker); }
+      a:hover { color:var(--gold); }
+      .contact { margin-top:.9rem; font-size:.9rem; }
+      button.expand { width:100%; min-height:44px; margin-top:.9rem; padding-top:.7rem; border:0; border-top:1px solid rgba(200,16,46,.28); background:transparent; color:var(--red); font:inherit; font-size:.8125rem; font-weight:600; text-align:left; cursor:pointer; }
+      .panel { display:none; }
+      .card.open .panel { display:block; }
+      .panel ul { list-style:none; padding:0; }
+      .panel strong { display:block; color:#fff; font-size:.8rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="brand" href="https://www.innovatered.com/">
+        <img src="https://www.innovatered.com/assets/RED_Logo_Canonical-XdhI9diR.png" alt="RED" />
+        RED
+      </a>
+      <p class="note">Preview only · not live · not Azure</p>
+    </header>
+    <main>
+      <p class="kicker">Team</p>
+      <h1>Who leads it</h1>
+      <p class="lede">Review pass for the expandable leadership cards. Live site stays on Azure until Ben promotes.</p>
+      <div class="grid">
+        <article class="card" id="ben">
+          <img class="avatar" src="https://www.innovatered.com/assets/ben-marum-YxGdVk3Q.jpg" alt="Ben Marum" width="72" height="72" />
+          <h2>Ben Marum</h2>
+          <p class="title">Founder / Managing Member</p>
+          <p class="sub">Director of Operations</p>
+          <p>Applications engineer and systems integrator delivering on-site, tech-enabled services to industrial standards.</p>
+          <p class="contact"><a href="tel:+19702143208">+1 (970) 214-3208</a><br /><a href="mailto:ben.marum@innovatered.com">ben.marum@innovatered.com</a></p>
+          <button class="expand" type="button" aria-expanded="false">View full profile</button>
+          <div class="panel">
+            <p class="kicker">Profile</p>
+            <p>Hard working, team oriented, self-motivated applications engineer and systems integrator. Seven years designing, costing, deploying, configuring, and integrating RFID and RTLS on Fortune 100 and federal sites.</p>
+            <p class="kicker">Focus</p>
+            <ul>
+              <li><strong>RTLS &amp; RF</strong>UWB · RAIN RFID · HF RFID · BLE · GPS / RTK · LiDAR</li>
+              <li><strong>Software</strong>Python · JavaScript · React · React Native · Full-stack</li>
+              <li><strong>Field survey</strong>Total station · 3D Helmert · CAD / SVG maps · Live production</li>
+              <li><strong>Delivery</strong>Presales · Costing · Integration · Project management</li>
+            </ul>
+          </div>
+        </article>
+        <article class="card" id="fernando">
+          <img class="avatar" src="https://www.innovatered.com/assets/fernando-garcia-ypvZqXAg.png" alt="Fernando Garcia" width="72" height="72" />
+          <h2>Fernando Garcia</h2>
+          <p class="title">Commercial Director</p>
+          <p>Commercial leadership — relationships, technical and executive sales, proposals, bidding, and RTLS ROI storytelling.</p>
+          <p class="contact"><a href="tel:+19152529777">+1 (915) 252-9777</a><br /><a href="mailto:fernando.garcia@innovatered.com">fernando.garcia@innovatered.com</a></p>
+          <button class="expand" type="button" aria-expanded="false">View full profile</button>
+          <div class="panel">
+            <p class="kicker">Profile</p>
+            <p>Commercial leadership focus: relationships, technical and executive sales, proposals, bidding, negotiating, and RTLS ROI / applications storytelling. University of Chicago Booth MBA. Engineer by training.</p>
+            <p class="kicker">Focus</p>
+            <ul>
+              <li><strong>Commercial</strong>Relationships · Technical sales · Executive sales · Proposals · Bidding · Negotiating</li>
+              <li><strong>RTLS</strong>ROI storytelling · Applications · Presales</li>
+            </ul>
+            <p class="kicker">Education</p>
+            <ul>
+              <li><strong>University of Chicago Booth School of Business</strong>MBA · Chicago, Illinois</li>
+            </ul>
+          </div>
+        </article>
+      </div>
+    </main>
+    <script>
+      document.querySelectorAll(".card").forEach((card) => {
+        const btn = card.querySelector(".expand");
+        btn.addEventListener("click", () => {
+          const open = card.classList.toggle("open");
+          btn.setAttribute("aria-expanded", String(open));
+          btn.textContent = open ? "Hide profile" : "View full profile";
+        });
+      });
+    </script>
+  </body>
+</html>
