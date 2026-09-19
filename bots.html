@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>RED · Bots</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #050002; color: #f4e8e8; font-family: "IBM Plex Sans JP", system-ui, sans-serif; }
+    .bots-page { position: relative; min-height: 100dvh; overflow: hidden; }
+    .bots-page canvas { position: absolute; inset: 0; z-index: 0; width: 100%; height: 100%; touch-action: none; }
+    .bots-vignette, .bots-scan { pointer-events: none; position: absolute; inset: 0; z-index: 1; }
+    .bots-vignette { background: radial-gradient(ellipse at 50% 44%, transparent 38%, rgba(5,0,2,.55) 82%, #050002 100%), linear-gradient(to bottom, rgba(5,0,2,.28), transparent 14%, transparent 84%, #050002); }
+    .bots-scan { opacity: .12; background: repeating-linear-gradient(to bottom, transparent 0, transparent 3px, rgba(5,0,2,.55) 3px, rgba(5,0,2,.55) 4px); }
+    .bots-overlay { pointer-events: none; position: relative; z-index: 2; display: flex; min-height: 100dvh; flex-direction: column; }
+    .bots-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 1.25rem 1.5rem 0; }
+    .bots-home { pointer-events: auto; margin: 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .68rem; font-weight: 500; letter-spacing: .42em; text-transform: uppercase; text-decoration: none; color: #a88a8a; }
+    .bots-home:hover, .bots-home:focus-visible { color: #ffd4d4; }
+    .bots-clock { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .75rem; font-variant-numeric: tabular-nums; letter-spacing: .18em; color: #a88a8a; }
+    .bots-hero-wrap { display: flex; flex: 1; align-items: center; justify-content: center; padding: 3rem 1.5rem; }
+    .bots-hero { display: flex; flex-direction: column; align-items: center; gap: 1.25rem; text-align: center; }
+    .bots-kicker { margin: 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .68rem; font-weight: 500; letter-spacing: .42em; text-transform: uppercase; color: #a88a8a; }
+    .bots-mark { display: flex; justify-content: center; margin: 0; font-size: clamp(4.6rem, 18vw, 11rem); font-weight: 600; letter-spacing: .18em; line-height: .86; color: color-mix(in oklab, #ffd4d4 78%, transparent); text-indent: .18em; -webkit-text-stroke: 1px color-mix(in oklab, #ff3a4a 85%, white 10%); text-shadow: 0 0 22px color-mix(in oklab, #c41e3a 55%, transparent), 0 0 70px color-mix(in oklab, #c41e3a 32%, transparent); }
+    .bots-letter { display: inline-block; min-width: .72em; text-align: center; }
+    .bots-rule { width: min(12rem, 42vw); height: 1px; background: color-mix(in oklab, #ff3a4a 45%, transparent); }
+    .bots-tag { margin: 0; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: clamp(.8rem, .72rem + .4vw, .95rem); letter-spacing: .22em; color: #c5b0b0; }
+    .bots-footer { pointer-events: auto; display: flex; justify-content: center; padding: 0 1rem max(1.5rem, env(safe-area-inset-bottom)); }
+    .bots-dock { display: flex; align-items: center; gap: .15rem; padding: .25rem; border: 1px solid #3a1a20; border-radius: 9999px; background: color-mix(in oklab, #120508 82%, transparent); }
+    .bots-dock button { min-height: 44px; min-width: 44px; padding: 0 .85rem; border: 0; background: transparent; color: #a88a8a; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: .75rem; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; }
+    .bots-dock button[aria-pressed="true"] { color: #ffd4d4; }
+    .bots-dock-rule { width: 1px; height: 1.1rem; background: #3a1a20; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    @media (prefers-reduced-motion: reduce) { .bots-scan { display: none; } .bots-mark { text-shadow: none; } }
+  </style>
+</head>
+<body>
+  <main class="bots-page">
+    <p class="sr-only">Animated digital rain of numbers and katakana falling in red.</p>
+    <canvas id="rain" aria-hidden="true"></canvas>
+    <div class="bots-vignette"></div>
+    <div class="bots-scan"></div>
+    <div class="bots-overlay">
+      <header class="bots-header">
+        <a href="index.html" class="bots-home" aria-label="RED home">RED</a>
+        <time class="bots-clock" id="clock" aria-label="Local time">00:00:00</time>
+      </header>
+      <div class="bots-hero-wrap">
+        <div class="bots-hero">
+          <p class="bots-kicker">bots</p>
+          <h1 class="bots-mark" id="mark">
+            <span data-letter class="bots-letter">R</span>
+            <span data-letter class="bots-letter">E</span>
+            <span data-letter class="bots-letter">D</span>
+          </h1>
+          <span class="bots-rule" aria-hidden="true"></span>
+          <p class="bots-tag">one shell. many bots.</p>
+        </div>
+      </div>
+      <footer class="bots-footer">
+        <div class="bots-dock">
+          <button type="button" id="pause" aria-pressed="false" aria-label="Pause rain">Pause</button>
+          <span class="bots-dock-rule" aria-hidden="true"></span>
+          <div role="group" aria-label="Rain density">
+            <button type="button" data-density="0.72">Sparse</button>
+            <button type="button" data-density="1" aria-pressed="true">Standard</button>
+            <button type="button" data-density="1.38">Dense</button>
+          </div>
+        </div>
+      </footer>
+    </div>
+  </main>
+  <script src="js/rain.js"></script>
+  <script>
+    const STEPS = [0.72, 1, 1.38];
+    const canvas = document.getElementById("rain");
+    const engine = new window.RedRain.MatrixEngine(canvas);
+    let paused = false;
+    let density = 1;
+    const raw = localStorage.getItem("red-rain-density");
+    const n = raw ? Number(raw) : 1;
+    if (STEPS.includes(n)) density = n;
+    engine.setDensity(density);
+    engine.setReducedMotion(matchMedia("(prefers-reduced-motion: reduce)").matches);
+    engine.start();
+    const ro = new ResizeObserver(() => engine.resize());
+    ro.observe(canvas.parentElement);
+    function measure() {
+      const zones = [];
+      document.querySelectorAll("[data-letter]").forEach((el) => {
+        const r = el.getBoundingClientRect();
+        zones.push({ x: r.left, y: r.top, w: r.width, h: r.height });
+      });
+      engine.setHotZones(zones);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    function point(e) {
+      const r = canvas.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    }
+    canvas.addEventListener("pointermove", (e) => { const p = point(e); engine.setPointer(p.x, p.y); });
+    canvas.addEventListener("pointerleave", () => engine.setPointer(null, null));
+    canvas.addEventListener("pointerdown", (e) => { const p = point(e); engine.burst(p.x, p.y); });
+    const pauseBtn = document.getElementById("pause");
+    function setPaused(next) {
+      paused = next;
+      engine.setPaused(paused);
+      pauseBtn.setAttribute("aria-pressed", String(paused));
+      pauseBtn.setAttribute("aria-label", paused ? "Resume rain" : "Pause rain");
+      pauseBtn.textContent = paused ? "Play" : "Pause";
+    }
+    pauseBtn.addEventListener("click", () => setPaused(!paused));
+    document.querySelectorAll("[data-density]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        density = Number(btn.getAttribute("data-density"));
+        engine.setDensity(density);
+        localStorage.setItem("red-rain-density", String(density));
+        document.querySelectorAll("[data-density]").forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+      });
+      btn.setAttribute("aria-pressed", String(Number(btn.getAttribute("data-density")) === density));
+    });
+    window.addEventListener("keydown", (e) => {
+      if (e.code !== "Space") return;
+      const t = e.target;
+      if (t && (t.tagName === "BUTTON" || t.tagName === "INPUT")) return;
+      e.preventDefault();
+      setPaused(!paused);
+    });
+    function pad(n) { return String(n).padStart(2, "0"); }
+    function tick() {
+      const d = new Date();
+      const stamp = pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+      const el = document.getElementById("clock");
+      el.textContent = stamp;
+      el.dateTime = stamp;
+    }
+    tick();
+    setInterval(tick, 1000);
+  </script>
+</body>
+</html>
