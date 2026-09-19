@@ -663,6 +663,11 @@ body.assembled {
 .gallery-status.is-live { color: var(--red); }
 .gallery-card.is-live { border-color: rgba(200, 16, 46, 0.55); }
 .gallery-open { margin-top: auto; align-self: flex-start; width: fit-content; }
+.rtls-card .gallery-status { margin: 0.85rem 0 0; }
+.socials-grid { grid-template-columns: 1fr; }
+@media (min-width: 860px) {
+  .socials-grid { grid-template-columns: 1fr 1fr; }
+}
 .gallery-card h3 {
   margin: 0 0 0.55rem;
   color: var(--heading);
