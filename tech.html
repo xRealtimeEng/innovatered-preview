@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/site.css" />
+  <title>RED · Tech</title>
+</head>
+<body class="assembled">
+  <header class="site-nav">
+    <a class="site-nav-brand" href="index.html" aria-label="RED home">RED</a>
+    <nav class="site-nav-links" aria-label="Primary">
+      <a class="site-nav-link" href="index.html">Home</a>
+      <a class="site-nav-link" href="about.html">About</a>
+      <a class="site-nav-link" href="team.html">Team</a>
+      <a class="site-nav-link" href="services.html">RTLS</a>
+      <a class="site-nav-link" href="rps.html">RPS</a>
+      <a class="site-nav-link" href="bots.html">Bots</a>
+      <a class="site-nav-link" href="how-we-deliver.html">How we deliver</a>
+      <a class="site-nav-link" href="demos.html">Demos</a>
+      <a class="site-nav-link is-active" href="tech.html">Tech</a>
+    </nav>
+  </header>
+  <main id="main" class="rtls-page">
+    <header class="rtls-hero">
+      <p class="placeholder-kicker">factory + http surface</p>
+      <p class="rps-mark">TECH</p>
+      <h1 class="rtls-title">How we built it. What it speaks.</h1>
+      <p class="rtls-lede">One factory line — paper to Postgres — plus the live Flask catalog. Stack, how to call the public API, and every public endpoint on a single page. Base <a class="tech-base" href="https://red-api-8w9g.onrender.com" rel="noreferrer">https://red-api-8w9g.onrender.com</a>.</p>
+      <p class="rps-note" role="note">Shared auth/contact path is Flask + SQLAlchemy. Long-term services stay FastAPI-class. No production database until fields stabilize. Engine internals stay in-house.</p>
+      <nav class="rtls-jump" aria-label="On this page">
+        <a href="#factory">Factory</a>
+        <a href="#stack">Stack</a>
+        <a href="#use">How to use</a>
+        <a href="#http">HTTP APIs</a>
+        <a href="#surface">Site surface</a>
+        <a href="#craft">Craft</a>
+      </nav>
+    </header>
+
+    <section id="factory" class="rtls-band rps-plain" aria-labelledby="factory-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">01</p>
+        <p class="placeholder-kicker">how we build</p>
+        <h2 id="factory-heading">The factory line</h2>
+        <p class="rtls-lede">Same order every time. Demos and sales lead. Expo / React Native only when a buyer needs a device — same canonical fields, not a second plant.</p>
+        <pre class="tech-receipt" aria-label="Factory receipt">RED FACTORY
+paper                 field notes
+excel                 canonical fields
+vite + react 19 + ts  demo / brochure
+flask + sqlalchemy    shared auth + contact
+postgres              when fields stabilize
+expo / react native   when a buyer needs a device</pre>
+      </div>
+      <div class="rtls-cards factory-cards">
+        <article class="rtls-card"><p class="rtls-card-meta">01</p><h3>Paper</h3><p>Field notes and site truth first. We do not invent a schema to look busy.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">02</p><h3>Excel field dictionary</h3><p>Canonical fields are the contract. Software matches the dictionary — not the other way around.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">03</p><h3>Vite / React demo</h3><p>TypeScript brochure and proofs ship while fields are still moving. Demos and sales lead.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">04</p><h3>Python + SQLAlchemy</h3><p>Shared HTTP surface: Flask now for auth and contact. FastAPI-class for other services when they earn it.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">05</p><h3>Postgres when stable</h3><p>Alembic every change. No production database until fields stabilize. No second data layer.</p></article>
+      </div>
+    </section>
+
+    <section id="stack" class="rtls-band rps-plain" aria-labelledby="stack-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">02</p>
+        <p class="placeholder-kicker">what runs</p>
+        <h2 id="stack-heading">Stack</h2>
+        <p class="rtls-lede">Layers we actually ship. Planning stays an internal teaser. Canvas rain is a craft page, not a product SKU.</p>
+      </div>
+      <div class="rtls-cards">
+        <article class="rtls-card"><p class="rtls-card-meta">Front</p><h3>Vite · React 19 · TypeScript</h3><p>Brochure, Team, RTLS, RPS teaser, and Bots. File routes, typed links, one shell.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">HTTP</p><h3>Flask + SQLAlchemy 2.x</h3><p>Shared auth and contact. Bearer tokens. One engine. Mapping lives in data, not in the model.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">Plan</p><h3>RPS planning teaser</h3><p>Internal floorplate engine behind Design-to-Delivery. Demo Portal proof. Not a licensed SKU.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">Draw</p><h3>Canvas glyph rain</h3><p>Bots is a crimson Matrix rain — glyph atlas, session clock, chrome off. Craft, not a library demo.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">Device</p><h3>Expo / React Native</h3><p>When a buyer needs a device — same canonical fields and API. Not a second factory.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">Fail</p><h3>Failsafe hosting</h3><p>Named demo / sandbox / live. Health checks. Fixtures if the API is down. Cut over only when asked.</p></article>
+      </div>
+    </section>
+
+    <section id="use" class="rtls-band rps-plain" aria-labelledby="use-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">03</p>
+        <p class="placeholder-kicker">public api</p>
+        <h2 id="use-heading">How to use it</h2>
+        <p class="rtls-lede">JSON in, JSON out. No SDK. Content-Type: application/json. Account routes take Authorization: Bearer. Browser calls work from innovatered.com and rps.innovatered.com. curl and server-to-server work from anywhere. This brochure does not call the API.</p>
+        <pre class="tech-receipt" aria-label="Public API examples"># liveness
+curl https://red-api-8w9g.onrender.com/health
+
+# contact
+curl -X POST https://red-api-8w9g.onrender.com/contact \
+  -H 'Content-Type: application/json' \
+  -d '{"name":"Alex","email":"alex@site.example","note":"24-device warehouse"}'
+
+# login → token
+curl -X POST https://red-api-8w9g.onrender.com/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@site.example","password":"********"}'
+
+# me
+curl https://red-api-8w9g.onrender.com/auth/me \
+  -H 'Authorization: Bearer <token>'</pre>
+        <p class="rtls-lede">Errors: 400 missing or invalid fields · 401 missing or bad bearer · 409 email already registered.</p>
+        <ul class="tech-links">
+          <li><a href="https://red-api-8w9g.onrender.com" rel="noreferrer">API base</a><span>No trailing slash. Append the path.</span></li>
+          <li><a href="https://red-api-8w9g.onrender.com/health" rel="noreferrer">GET /health</a><span>Public liveness. Open it.</span></li>
+          <li><a href="https://www.innovatered.com" rel="noreferrer">innovatered.com</a><span>Live brochure origin.</span></li>
+          <li><a href="mailto:ben.marum@innovatered.com?subject=RED%20inquiry%20%E2%80%94%20device%20count%20%26%20timeline">Talk to RED</a><span>Device count and timeline.</span></li>
+        </ul>
+      </div>
+      <div class="rtls-cards">
+        <article class="rtls-card"><p class="rtls-card-meta">01</p><h3>Ping health</h3><p>GET /health. Public. Confirms the process is up. Open it in a new tab from this page.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">02</p><h3>Send a note</h3><p>POST /contact with name, email, and note. Company is optional. This is the brochure lead path.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">03</p><h3>Open a session</h3><p>POST /auth/register or /auth/login. JSON in, token + user out. Store the token as red_auth_token.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">04</p><h3>Call as you</h3><p>Send Authorization: Bearer <token> on GET /auth/me and POST /auth/logout. Client clears the token after logout.</p></article>
+      </div>
+    </section>
+
+    <section id="http" class="rtls-band rps-plain" aria-labelledby="http-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">04</p>
+        <p class="placeholder-kicker">endpoints</p>
+        <h2 id="http-heading">HTTP APIs</h2>
+        <p class="rtls-lede">Live Flask routes and the planned OpenAPI pair. Open a card for request, response, and fields. GET /health is public.</p>
+      </div>
+      <ul class="api-grid">
+        <li>
+          <details class="api-card" open>
+            <summary class="api-card-head"><span class="api-method api-method--get">GET</span><code>/health</code><span class="api-status api-status--live">live</span></summary>
+            <p>Liveness for the Flask process. Public. No auth.</p>
+            <p class="api-meta-line">Request: None · Response: { "status": "ok", "service": "red-api" }</p>
+            <p class="api-expand">Use this as the deploy check. Keep the shape; add a version field only if you need it.</p>
+            <p><a class="api-open" href="https://red-api-8w9g.onrender.com/health" target="_blank" rel="noreferrer">Open /health →</a></p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--post">POST</span><code>/contact</code><span class="api-status api-status--live">live</span></summary>
+            <p>Lead capture. Persists a row; may log or SMTP mail per MAIL_MODE.</p>
+            <p class="api-meta-line">Request: JSON body · Response: { "ok": true, "id": 1, "mail": "log" }. 400 if name/email/note missing.</p>
+            <ul class="api-fields">
+              <li><code>name</code><span class="api-field-type">string</span>Required. Trimmed.</li>
+              <li><code>email</code><span class="api-field-type">string</span>Required. Must look like an email.</li>
+              <li><code>company</code><span class="api-field-type">string</span>Optional. Trimmed; omit or empty OK.</li>
+              <li><code>note</code><span class="api-field-type">string</span>Required. Trimmed.</li>
+            </ul>
+            <p class="api-expand">The Home contact form posts here. Keep those fields aligned with this card.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--post">POST</span><code>/auth/register</code><span class="api-status api-status--live">live</span></summary>
+            <p>Create an account. Returns a bearer token and user.</p>
+            <p class="api-meta-line">Request: JSON body · Response: 201 { token, user }. 400 validation. 409 duplicate email.</p>
+            <ul class="api-fields">
+              <li><code>email</code><span class="api-field-type">string</span>Required. Normalized lower-case.</li>
+              <li><code>password</code><span class="api-field-type">string</span>Required. Min 8 characters.</li>
+              <li><code>name</code><span class="api-field-type">string</span>Optional. Trimmed.</li>
+            </ul>
+            <p class="api-expand">Client stores the token as red_auth_token and sends Authorization: Bearer on later calls.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--post">POST</span><code>/auth/login</code><span class="api-status api-status--live">live</span></summary>
+            <p>Sign in. Same token + user shape as register.</p>
+            <p class="api-meta-line">Request: JSON body · Response: { token, user }. 401 on invalid credentials.</p>
+            <ul class="api-fields">
+              <li><code>email</code><span class="api-field-type">string</span>Required.</li>
+              <li><code>password</code><span class="api-field-type">string</span>Required.</li>
+            </ul>
+            <p class="api-expand">Same token key as register.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--get">GET</span><code>/auth/me</code><span class="api-status api-status--live">live</span></summary>
+            <p>Current user for a valid bearer token.</p>
+            <p class="api-meta-line">Request: Authorization: Bearer <token> · Response: { user }. 401 if missing or invalid.</p>
+            <p class="api-expand">Used by the account drawer. 401 should clear the stored token.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--post">POST</span><code>/auth/logout</code><span class="api-status api-status--live">live</span></summary>
+            <p>Revokes the bearer token server-side.</p>
+            <p class="api-meta-line">Request: Bearer optional; empty JSON body OK · Response: { "ok": true }</p>
+            <p class="api-expand">Client always clears red_auth_token after logout, even if the request fails.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--get">GET</span><code>/docs</code><span class="api-status">planned</span></summary>
+            <p>Swagger UI — not shipped. Flask has no OpenAPI UI by default.</p>
+            <p class="api-expand">This catalog is the contract until we adopt an OpenAPI UI.</p>
+          </details>
+        </li>
+        <li>
+          <details class="api-card">
+            <summary class="api-card-head"><span class="api-method api-method--get">GET</span><code>/openapi.json</code><span class="api-status">planned</span></summary>
+            <p>OpenAPI schema — not shipped on the Flask app.</p>
+            <p class="api-expand">Prefer documenting live routes here over a generated file that does not exist.</p>
+          </details>
+        </li>
+      </ul>
+    </section>
+
+    <section id="surface" class="rtls-band rps-plain" aria-labelledby="surface-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">05</p>
+        <p class="placeholder-kicker">pages in the shell</p>
+        <h2 id="surface-heading">Site surface</h2>
+        <p class="rtls-lede">Routes nest under the app shell. Add a row when you add a page. /apis folds into Tech so the catalog and the factory stay together.</p>
+      </div>
+      <div class="tech-table-wrap">
+        <table class="api-table">
+          <thead>
+            <tr><th>Path</th><th>Page</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>/</code></td><td>Home</td><td>Assembled table of contents.</td></tr>
+            <tr><td><code>/about</code></td><td>About</td><td>Company story. People live on Team.</td></tr>
+            <tr><td><code>/team</code></td><td>Team</td><td>Expandable cards — Ben and Fernando.</td></tr>
+            <tr><td><code>/services</code></td><td>RTLS</td><td>Presales and post-sales as two sections.</td></tr>
+            <tr><td><code>/rps</code></td><td>RPS</td><td>Internal planning teaser. Not a SKU.</td></tr>
+            <tr><td><code>/bots</code></td><td>Bots</td><td>Crimson glyph rain. Chrome off. RED wordmark home.</td></tr>
+            <tr><td><code>/tech</code></td><td>Tech</td><td>This catalog. Stack plus HTTP surface.</td></tr>
+            <tr><td><code>/how-we-deliver</code></td><td>How we deliver</td><td>Placeholder until absorbed.</td></tr>
+            <tr><td><code>/demos</code></td><td>Demo Portal</td><td>Placeholder until absorbed.</td></tr>
+            <tr><td><code>/apis</code></td><td>APIs</td><td>Redirects here. One tech surface.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="craft" class="rtls-band rps-plain" aria-labelledby="craft-heading">
+      <div class="rtls-band-copy">
+        <p class="rtls-index" aria-hidden="true">06</p>
+        <p class="placeholder-kicker">how we stay exceptional</p>
+        <h2 id="craft-heading">Craft</h2>
+        <p class="rtls-lede">Bench rules we actually run. The last 10% is founder-parallel. Kits stay private. Test bots do not write live.</p>
+      </div>
+      <div class="rtls-cards">
+        <article class="rtls-card"><p class="rtls-card-meta">01</p><h3>Field dictionary is the contract</h3><p>Excel fields before tables. SQLAlchemy matches the dictionary. Postgres waits.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">02</p><h3>One engine</h3><p>New tables reuse the SQLAlchemy engine. No second data layer. No Mongo because it is flexible.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">03</p><h3>Mapping in data</h3><p>Connectors: auth, map, read, write, replay, audit. The model never holds raw SaaS clients.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">04</p><h3>Idempotent writes</h3><p>Queue what cannot finish in a request. Unique external_id. JSONB for raw payloads.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">05</p><h3>Public pages do not carry kits</h3><p>Brochure shows the HTTP surface and the factory line. Coverage algorithms, file formats, and engine internals stay in-house.</p></article>
+        <article class="rtls-card"><p class="rtls-card-meta">06</p><h3>Craft on the last 10%</h3><p>Glyph-atlas rain. Expandable team cards. Device-count services with no published rate card. Jump TOCs that actually jump.</p></article>
+      </div>
+    </section>
+
+    <section class="rtls-wrap" aria-labelledby="tech-close">
+      <p class="placeholder-kicker">one line</p>
+      <h2 id="tech-close">The plant, not a snowflake repo.</h2>
+      <p class="rtls-lede">Field dictionary in. Shared API out. Brochure in front. Planning engine inside the delivery — never sold as software.</p>
+      <div class="rtls-actions">
+        <a class="rtls-btn rtls-btn-primary" href="mailto:ben.marum@innovatered.com?subject=RED%20inquiry%20%E2%80%94%20device%20count%20%26%20timeline">Talk to RED</a>
+        <a class="rtls-btn rtls-btn-ghost" href="about.html">About RED</a>
+        <a class="rtls-btn rtls-btn-ghost" href="bots.html">Bots rain</a>
+      </div>
+    </section>
+  </main>
+  <footer class="site-foot">
+    Realtime Engineering and Development LLC · Windsor, Colorado · brochure preview only
+  </footer>
+</body>
+</html>
