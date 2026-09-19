@@ -1,26 +1,10 @@
 name: Deploy preview
+# GitHub Pages for this repo is sourced from the gh-pages branch (legacy),
+# not GitHub Actions. Keep this workflow disabled so main pushes do not go red.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-concurrency:
-  group: pages
-  cancel-in-progress: true
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  skip:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
-      - id: deployment
-        uses: actions/deploy-pages@v4
+      - run: echo "Pages source is gh-pages. Push that branch to publish."
