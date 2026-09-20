@@ -85,7 +85,6 @@
       <a class="site-nav-link" href="tech.html">Tech</a>
     </nav>
   </header>
-
   <div class="wrap team-shell">
     <header class="top">
       <div class="brand"><p class="kicker">LEADERSHIP</p><h1>RED</h1></div>
@@ -98,12 +97,7 @@
       <article class="card" id="ben">
         <div class="face">
           <img class="avatar" src="https://www.innovatered.com/assets/ben-marum-YxGdVk3Q.jpg" alt="Ben Marum" />
-          <div class="meta">
-            <p class="co">RED</p>
-            <h2 class="name">Ben Marum</h2>
-            <p class="role">Founder / Managing Member</p>
-            <p class="subrole">Director of Operations</p>
-          </div>
+          <div class="meta"><p class="co">RED</p><h2 class="name">Ben Marum</h2><p class="role">Founder / Managing Member</p><p class="subrole">Director of Operations</p></div>
           <img class="mark" src="https://www.innovatered.com/assets/RED_Logo_Canonical-XdhI9diR.png" alt="" />
           <p class="highlight">Applications engineer and systems integrator delivering on-site, tech-enabled services to industrial standards.</p>
           <div class="contacts">
@@ -147,11 +141,27 @@
           <section class="section"><h3>EDUCATION</h3><div class="job"><h4>University of Chicago Booth School of Business</h4><p class="org">MBA · Chicago, Illinois</p></div></section>
         </div></div>
       </article>
+      <article class="card" id="jill">
+        <div class="face">
+          <img class="avatar" src="https://s3.amazonaws.com/homesnap.users/790205363_150.jpg" alt="Jill Marum" />
+          <div class="meta"><p class="co">RED</p><h2 class="name">Jill Marum</h2><p class="role">Member</p><p class="subrole">Broker · Your Castle Real Estate</p></div>
+          <img class="mark" src="https://www.innovatered.com/assets/RED_Logo_Canonical-XdhI9diR.png" alt="" />
+          <p class="highlight">RED company member. Colorado broker — Certified Negotiation Expert and e-Pro — serving Windsor, Loveland, and the Front Range.</p>
+          <div class="contacts">
+            <a href="tel:+19705660313"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6.5 3.5 9 6.2c.3.3.4.8.2 1.2L8 9.7c1.2 2.4 3.1 4.3 5.5 5.5l2.3-1.2c.4-.2.9-.1 1.2.2l2.7 2.5c.5.5.5 1.3 0 1.8l-1.5 1.5c-.6.6-1.5.8-2.3.5C9.7 19.4 4.6 14.3 2.5 8.1c-.3-.8-.1-1.7.5-2.3L4.5 4.3c.6-.7 1.5-.8 2-.8z"/></svg>+1 (970) 566-0313</a>
+            <a href="mailto:jillmarum@gmail.com"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m4 7 8 6 8-6"/></svg>jillmarum@gmail.com</a>
+          </div>
+          <button class="toggle" type="button" aria-expanded="false">View full profile <span class="chev">▾</span></button>
+        </div>
+        <div class="expand"><div>
+          <section class="section"><h3>PROFILE</h3><p>RED company member. Broker with Your Castle Real Estate. Colorado license FA100031692. Designations: Certified Negotiation Expert (CNE) and e-Pro. Works Northern Colorado and the Front Range — Windsor, Loveland, Fort Collins, Longmont, Wellington, and Denver metro.</p></section>
+          <section class="section"><h3>FOCUS</h3><div class="skills"><div><strong>Brokerage</strong>Buyers · Sellers · Negotiation · e-Pro</div><div><strong>Markets</strong>Windsor · Loveland · Fort Collins · Longmont · Wellington · Denver</div></div></section>
+          <section class="section"><h3>COMPANY WEBSITE</h3><p>https://www.homesnap.com/Jill-Marum/gmb</p></section>
+        </div></div>
+      </article>
     </div>
   </div>
-  <footer class="site-foot">
-    Realtime Engineering and Development LLC · Windsor, Colorado · brochure preview only
-  </footer>
+  <footer class="site-foot">Realtime Engineering and Development LLC · Windsor, Colorado · brochure preview only</footer>
   <div class="toast" id="toast">Link copied</div>
   <script>
     const root = document.documentElement;
@@ -175,7 +185,7 @@
       try {
         if (navigator.share) await navigator.share({ title: "RED Leadership", url });
         else { await navigator.clipboard.writeText(url); ping(); }
-      } catch { await navigator.clipboard.writeText(url); ping(); }
+      } catch { try { await navigator.clipboard.writeText(url); ping(); } catch (e) {} }
     });
     function ping(){ const t=document.getElementById("toast"); t.style.display="block"; setTimeout(()=>t.style.display="none",1600); }
   </script>
