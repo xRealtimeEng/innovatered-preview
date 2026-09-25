@@ -3,85 +3,102 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
-  <meta name="robots" content="noindex,nofollow" />
   <meta name="theme-color" content="#0B1220" />
   <meta name="mobile-web-app-capable" content="yes" />
   <title>RED Noteboard · Working</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div class="banner" role="status">Working SKU · glass studio · local only · not OneNote · not a live Figma file</div>
-
-  <header class="top glass" id="appHeader">
-    <div class="brand">
-      <span class="mark">RED</span>
-      <input id="sessionTitle" class="nb-title" maxlength="80" aria-label="Notebook name" value="Customer walkthrough" />
-    </div>
-    <nav class="tabs" aria-label="Sections">
-      <button type="button" class="tab is-on" data-section="sketch">Studio</button>
-      <button type="button" class="tab" data-section="board">Shapes</button>
-      <button type="button" class="tab" data-section="notes">Notes</button>
-      <button type="button" class="tab" data-section="handoff">Handoff</button>
-    </nav>
-    <p id="status" class="status">Ready.</p>
-  </header>
-
+<body class="studio-first">
   <section id="view-sketch" class="view is-on">
     <div id="studio">
-      <aside id="leftDrawer" class="drawer glass left is-open">
-        <button type="button" class="drawer-toggle" data-side="left" aria-label="Toggle left drawer">‹</button>
-        <h2>Pieces</h2>
-        <p class="hint">Drag onto the canvas. Click a piece to edit.</p>
-        <div class="kit" id="leftKit"></div>
-        <label class="import-btn">Import photo
-          <input id="fileImport" type="file" accept="image/*" multiple hidden />
-        </label>
-        <div id="photoKit" class="kit"></div>
-      </aside>
-
-      <div class="stage">
-        <div class="zoombar glass">
-          <button type="button" id="btnZoomOut" aria-label="Zoom out">−</button>
-          <span id="zoomReadout">100%</span>
-          <button type="button" id="btnZoomIn" aria-label="Zoom in">+</button>
-          <button type="button" id="btnFit">Fit</button>
-          <button type="button" id="btnMax">Full screen</button>
-          <button type="button" id="btnUndo">Undo</button>
-        </div>
-        <div id="viewport">
-          <div id="world">
-            <canvas id="paper"></canvas>
-            <canvas id="ink"></canvas>
-            <div id="pins" class="pins"></div>
-          </div>
-        </div>
-        <div class="media-dock glass" id="mediaDock"></div>
-        <div class="palette glass" id="palette">
-          <div class="wells" id="wells"></div>
-          <div class="mix" id="mixPlate" aria-label="Mix plate"></div>
-          <div class="mix-read">
-            <span id="mixSwatch"></span>
-            <input id="inkColor" type="color" value="#1B3A6B" />
-            <label>Size <input id="inkWidth" type="range" min="1" max="80" value="10" /></label>
-          </div>
+      <div id="viewport">
+        <div id="world">
+          <canvas id="paper"></canvas>
+          <canvas id="ink"></canvas>
+          <div id="pins" class="pins"></div>
         </div>
       </div>
 
-      <aside id="rightDrawer" class="drawer glass right is-open">
-        <button type="button" class="drawer-toggle" data-side="right" aria-label="Toggle right drawer">›</button>
-        <h2>UI presets</h2>
-        <p class="hint">Nav and footer snap to the canvas edges.</p>
-        <div class="kit" id="rightKit"></div>
+      <header class="nav-line glass" id="appHeader">
+        <span class="mark">RED</span>
+        <input id="sessionTitle" class="title-bubble" maxlength="80" aria-label="Page title" value="Customer walkthrough" />
+        <div class="menu-wrap">
+          <button type="button" id="btnPages" class="glass-btn" aria-haspopup="true">Pages ▾</button>
+          <div id="pageMenu" class="menu glass" hidden>
+            <button type="button" class="tab is-on" data-section="sketch">Studio</button>
+            <button type="button" class="tab" data-section="board">Shapes</button>
+            <button type="button" class="tab" data-section="notes">Notes</button>
+            <button type="button" class="tab" data-section="handoff">Handoff</button>
+            <p class="fine">Working · local · not OneNote · not live Figma</p>
+          </div>
+        </div>
+      </header>
+
+      <button type="button" id="btnLeft" class="glass-btn corner c-left" aria-label="Open pieces">Pieces</button>
+      <button type="button" id="btnRight" class="glass-btn corner c-right" aria-label="Open shapes">Shapes</button>
+
+      <div id="mixHud" class="hud glass">
+        <canvas id="wheel" width="120" height="120" aria-label="Color wheel"></canvas>
+        <div class="mix-table">
+          <button type="button" id="mixA" class="mix-well">A</button>
+          <span>+</span>
+          <button type="button" id="mixB" class="mix-well">B</button>
+          <span>=</span>
+          <button type="button" id="mixOut" class="mix-well out">Mix</button>
+        </div>
+        <input id="inkColor" type="color" value="#1B3A6B" hidden />
+      </div>
+
+      <div class="add-wrap">
+        <button type="button" id="btnAdd" class="glass-btn corner c-add" aria-label="Add">+</button>
+        <div id="addMenu" class="menu glass" hidden>
+          <button type="button" data-add="image">Image</button>
+          <button type="button" data-add="video">Video</button>
+          <button type="button" data-add="left">Page left</button>
+          <button type="button" data-add="right">Page right</button>
+          <button type="button" data-add="top">Page up</button>
+          <button type="button" data-add="bottom">Page down</button>
+        </div>
+        <input id="fileImport" type="file" accept="image/*,video/*" hidden />
+      </div>
+
+      <button type="button" id="toolFab" class="tool-fab glass" aria-label="Tools">Round</button>
+      <div id="toolSheet" class="sheet-up glass" hidden>
+        <div class="sheet-head">
+          <strong id="toolName">Round</strong>
+          <button type="button" id="btnUndo" class="glass-btn">Undo</button>
+          <button type="button" id="btnFit" class="glass-btn">Fit</button>
+          <button type="button" id="btnMax" class="glass-btn">Full</button>
+        </div>
+        <div id="mediaDock" class="media-dock"></div>
+        <label>Size <input id="inkWidth" type="range" min="1" max="80" value="10" /></label>
+        <label>Hardness <input id="hardness" type="range" min="8" max="100" value="72" /></label>
+        <p id="status" class="status">Ready.</p>
+      </div>
+
+      <aside id="leftDrawer" class="drawer glass left">
+        <h2>Pieces</h2>
+        <p class="hint">Stickies, text, buttons, presets. Drag onto the canvas.</p>
+        <div class="kit" id="leftKit"></div>
+        <div id="photoKit" class="kit"></div>
       </aside>
+      <aside id="rightDrawer" class="drawer glass right">
+        <h2>Shapes & pages</h2>
+        <p class="hint">Color a shape with the mix result, then drag it out.</p>
+        <div class="kit" id="rightKit"></div>
+        <div id="pageKit" class="kit"></div>
+      </aside>
+      <div id="dim" hidden></div>
     </div>
   </section>
 
   <section id="view-board" class="view" hidden>
     <div class="sheet glass">
       <header class="sheet-head">
+        <button type="button" class="tab" data-section="sketch">← Studio</button>
         <h1>Sticky shapes</h1>
         <button type="button" id="btnAddType" class="btn">New type</button>
-        <button type="button" id="btnAddSticky" class="btn primary">New piece</button>
+        <button type="button" id="btnAddSticky" class="btn">New piece</button>
       </header>
       <div id="typeGrid" class="type-grid"></div>
       <div id="columns" class="harbor"></div>
@@ -90,12 +107,12 @@
 
   <section id="view-notes" class="view" hidden>
     <div class="letter glass">
+      <button type="button" class="tab" data-section="sketch">← Studio</button>
       <div class="note-tools">
         <button type="button" data-cmd="bold"><b>B</b></button>
         <button type="button" data-cmd="italic"><i>I</i></button>
-        <button type="button" data-cmd="insertUnorderedList">List</button>
         <button type="button" id="btnExportMd">.md</button>
-        <button type="button" id="btnExportDocx" class="primary">.docx</button>
+        <button type="button" id="btnExportDocx">.docx</button>
       </div>
       <input id="docTitle" class="page-heading" maxlength="80" value="Meeting notes" />
       <div id="editor" class="letter-body" contenteditable="true"></div>
@@ -104,13 +121,11 @@
 
   <section id="view-handoff" class="view" hidden>
     <div class="letter glass">
+      <button type="button" class="tab" data-section="sketch">← Studio</button>
       <h1>Handoff</h1>
-      <p>Export the studio as Figma-shaped JSON. Live Figma write stays Connected.</p>
-      <button type="button" id="btnExportFigma" class="btn primary">Download Figma JSON</button>
+      <button type="button" id="btnExportFigma" class="btn">Download Figma JSON</button>
     </div>
   </section>
-
-  <footer class="foot glass" id="appFooter">Object: board_session · pinch or wheel to zoom · rotate in full screen</footer>
   <script src="app.js"></script>
 </body>
 </html>

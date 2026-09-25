@@ -1,18 +1,11 @@
-const STORAGE = "red-noteboard-working-v3";
-const WORLD_W = 2400;
-const WORLD_H = 1600;
+const STORAGE = "red-noteboard-working-v4";
+const PAGE_W = 1600;
+const PAGE_H = 1100;
 const COLUMNS = [
   { id: "todo", title: "Ready" },
   { id: "doing", title: "On canvas" },
   { id: "done", title: "Locked" },
 ];
-
-const PIGMENTS = [
-  "#1B3A6B","#0E7490","#147A3D","#C9A227","#C2410C","#9F1239","#6D28D9","#111827","#FFFFFF","#F5E6C8",
-  "#7F1D1D","#9A3412","#A16207","#3F6212","#155E75","#1E3A8A","#4C1D95","#831843","#44403C","#0F172A",
-  "#FB7185","#FDBA74","#FDE68A","#86EFAC","#67E8F9","#93C5FD","#C4B5FD","#F9A8D4","#D6D3D1","#000000",
-];
-
 const MEDIA = [
   { id: "oil", group: "Paint", label: "Oil", alpha: 0.92, size: 18, stamp: "round", wet: 0.15 },
   { id: "acrylic", group: "Paint", label: "Acrylic", alpha: 1, size: 14, stamp: "round", wet: 0 },
@@ -34,96 +27,29 @@ const MEDIA = [
   { id: "eraser", group: "Edit", label: "Eraser", alpha: 1, size: 16, stamp: "erase" },
   { id: "pan", group: "Edit", label: "Pan", alpha: 1, size: 1, stamp: "none" },
 ];
-
 const LEFT_PRESETS = [
   { kind: "sticky", title: "Sticky note", body: "Change request", w: 180, h: 90 },
   { kind: "textbox", title: "Heading", body: "Screen title", w: 220, h: 56 },
-  { kind: "textbox", title: "Text box", body: "Detail copy", w: 220, h: 80 },
-  { kind: "symbol", title: "●", body: "Marker", w: 70, h: 48 },
+  { kind: "textbox", title: "Text section", body: "Body copy", w: 240, h: 90 },
   { kind: "shape", title: "Button", body: "Primary", w: 140, h: 48 },
+  { kind: "list", title: "List", body: "• One\n• Two", w: 200, h: 100 },
+  { kind: "form", title: "Form", body: "Name\nEmail", w: 220, h: 120 },
 ];
-
-const RIGHT_PRESETS = [
-  { kind: "nav", title: "Navbar", body: "Logo    Home    Work    Contact", snap: "nav", w: 0.92, h: 56 },
-  { kind: "footer", title: "Footer", body: "© RED · Privacy · Contact", snap: "footer", w: 0.92, h: 56 },
-  { kind: "list", title: "List", body: "• Item one\n• Item two\n• Item three", w: 200, h: 110 },
-  { kind: "form", title: "Form", body: "Name\nEmail\n[ Send ]", w: 220, h: 130 },
+const RIGHT_SHAPES = [
+  { kind: "shape", title: "Rectangle", body: "", w: 160, h: 90, symbol: "▭" },
+  { kind: "shape", title: "Oval", body: "", w: 140, h: 90, symbol: "◯" },
+  { kind: "symbol", title: "Star", body: "★", w: 80, h: 80, symbol: "★" },
+  { kind: "symbol", title: "Arrow", body: "→", w: 90, h: 60, symbol: "→" },
+  { kind: "nav", title: "Navbar", body: "Logo   Home   Work", snap: "nav", w: 0.92, h: 56 },
+  { kind: "footer", title: "Footer", body: "© RED", snap: "footer", w: 0.92, h: 56 },
 ];
 
 function uid(p) {
   return `${p}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
 }
-
-function defaultTypes() {
-  return [
-    { id: "t-note", name: "Sticky note", kind: "sticky", symbol: "▢", color: "#FFF6A8" },
-    { id: "t-box", name: "Text box", kind: "textbox", symbol: "T", color: "#FFFFFF" },
-    { id: "t-oval", name: "Oval note", kind: "shape", symbol: "◯", color: "#D5E6F5" },
-    { id: "t-star", name: "Priority", kind: "symbol", symbol: "★", color: "#FDE68A" },
-    { id: "t-photo", name: "Photo frame", kind: "photo", symbol: "▣", color: "#E5E7EB" },
-  ];
-}
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
-  return {
-    session_id: "sess-001",
-    session_title: "Customer walkthrough",
-    section: "sketch",
-    strokes: [],
-    pieces: [],
-    photos: [],
-    types: defaultTypes(),
-    columns: {
-      todo: [
-        { id: "st-login", title: "Sign-in strip", body: "Quiet login.", type_id: "t-note" },
-        { id: "st-nav", title: "Top nav", body: "Snap a navbar.", type_id: "t-box" },
-      ],
-      doing: [{ id: "st-frame", title: "Studio canvas", body: "Zoom and paint.", type_id: "t-note" }],
-      done: [{ id: "st-name", title: "board_session", body: "IDs not titles.", type_id: "t-star" }],
-    },
-    mix: ["#1B3A6B", "#C2410C", "#147A3D", "#FFFFFF", null, null, null, null],
-    color: "#1B3A6B",
-    doc_title: "Meeting notes",
-    doc_html: "<h2>Walkthrough</h2><p>Paint the screen. Pin the change. Write the ask.</p>",
-  };
-}
-
-const state = loadState();
-const view = { x: 80, y: 40, scale: 0.42 };
-let media = MEDIA[3];
-let drawing = false;
-let stroke = null;
-let dragPreset = null;
-let activePiece = null;
-let mode = "draw";
-const pointers = new Map();
-
-const $ = (id) => document.getElementById(id);
-const ink = $("ink");
-const paper = $("paper");
-const ictx = ink.getContext("2d");
-const pctx = paper.getContext("2d");
-
-function save() {
-  state.session_title = $("sessionTitle").value.trim() || "Untitled";
-  if ($("docTitle")) state.doc_title = $("docTitle").value.trim() || "Meeting notes";
-  if ($("editor")) state.doc_html = $("editor").innerHTML;
-  state.color = $("inkColor").value;
-  localStorage.setItem(STORAGE, JSON.stringify(state));
-  $("status").textContent = "Saved on this device.";
-}
-
-function setStatus(m) {
-  $("status").textContent = m;
-}
-
 function hexToRgb(hex) {
-  const h = hex.replace("#", "");
-  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+  const h = (hex || "#000000").replace("#", "");
+  return [parseInt(h.slice(0, 2), 16) || 0, parseInt(h.slice(2, 4), 16) || 0, parseInt(h.slice(4, 6), 16) || 0];
 }
 function rgbToHex(r, g, b) {
   return "#" + [r, g, b].map((n) => Math.max(0, Math.min(255, n | 0)).toString(16).padStart(2, "0")).join("");
@@ -136,38 +62,138 @@ function mixHex(a, b) {
   return rgbToHex((A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2);
 }
 
-function applyView() {
-  $("world").style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
-  $("zoomReadout").textContent = `${Math.round(view.scale * 100)}%`;
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE);
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return {
+    session_id: "sess-001",
+    session_title: "Customer walkthrough",
+    section: "sketch",
+    pages: [{ id: "pg-0", gx: 0, gy: 0, title: "Page 1" }],
+    strokes: [],
+    pieces: [],
+    photos: [],
+    types: [
+      { id: "t-note", name: "Sticky note", kind: "sticky", symbol: "▢", color: "#FFF6A8" },
+      { id: "t-box", name: "Text box", kind: "textbox", symbol: "T", color: "#FFFFFF" },
+    ],
+    columns: {
+      todo: [{ id: "st-login", title: "Sign-in strip", body: "Quiet login.", type_id: "t-note" }],
+      doing: [{ id: "st-frame", title: "Studio canvas", body: "Full bleed.", type_id: "t-note" }],
+      done: [],
+    },
+    mixA: "#1B3A6B",
+    mixB: "#C2410C",
+    color: "#1B3A6B",
+    hardness: 72,
+    doc_title: "Meeting notes",
+    doc_html: "<p>Paint the screen. Pin the change.</p>",
+  };
 }
 
+const state = loadState();
+const view = { x: 0, y: 0, scale: 0.4 };
+let media = MEDIA[3];
+let drawing = false;
+let stroke = null;
+let dragPreset = null;
+let activePiece = null;
+let mode = "draw";
+let addTarget = "image";
+const pointers = new Map();
+const $ = (id) => document.getElementById(id);
+const ink = $("ink");
+const paper = $("paper");
+const ictx = ink.getContext("2d");
+const pctx = paper.getContext("2d");
+const wctx = $("wheel").getContext("2d");
+
+function grid() {
+  const xs = state.pages.map((p) => p.gx);
+  const ys = state.pages.map((p) => p.gy);
+  const minx = Math.min(...xs);
+  const maxx = Math.max(...xs);
+  const miny = Math.min(...ys);
+  const maxy = Math.max(...ys);
+  return {
+    minx, miny, maxx, maxy,
+    w: (maxx - minx + 1) * PAGE_W,
+    h: (maxy - miny + 1) * PAGE_H,
+    ox: minx * PAGE_W,
+    oy: miny * PAGE_H,
+  };
+}
+function worldSize() {
+  const g = grid();
+  return { w: g.w, h: g.h };
+}
+function toLocal(x, y) {
+  const g = grid();
+  return { x: x - g.ox, y: y - g.oy };
+}
+
+function save() {
+  state.session_title = $("sessionTitle").value.trim() || "Untitled";
+  if ($("docTitle")) state.doc_title = $("docTitle").value.trim() || "Notes";
+  if ($("editor")) state.doc_html = $("editor").innerHTML;
+  state.color = $("inkColor").value;
+  state.hardness = Number($("hardness").value);
+  localStorage.setItem(STORAGE, JSON.stringify(state));
+  $("status").textContent = "Saved on this device.";
+}
+function setStatus(m) {
+  $("status").textContent = m;
+}
+
+function applyView() {
+  $("world").style.width = worldSize().w + "px";
+  $("world").style.height = worldSize().h + "px";
+  $("world").style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
+}
 function fitView() {
   const vp = $("viewport").getBoundingClientRect();
-  view.scale = Math.min(vp.width / WORLD_W, vp.height / WORLD_H) * 0.92;
-  view.x = (vp.width - WORLD_W * view.scale) / 2;
-  view.y = (vp.height - WORLD_H * view.scale) / 2;
+  const { w, h } = worldSize();
+  view.scale = Math.min(vp.width / w, vp.height / h);
+  view.x = (vp.width - w * view.scale) / 2;
+  view.y = (vp.height - h * view.scale) / 2;
   applyView();
 }
-
 function screenToWorld(evt) {
   const vp = $("viewport").getBoundingClientRect();
+  const g = grid();
   return {
-    x: (evt.clientX - vp.left - view.x) / view.scale,
-    y: (evt.clientY - vp.top - view.y) / view.scale,
+    x: (evt.clientX - vp.left - view.x) / view.scale + g.ox,
+    y: (evt.clientY - vp.top - view.y) / view.scale + g.oy,
   };
 }
 
 function prepCanvases() {
-  for (const c of [ink, paper]) {
-    c.width = WORLD_W;
-    c.height = WORLD_H;
-  }
-  pctx.fillStyle = "#F7F4EE";
-  pctx.fillRect(0, 0, WORLD_W, WORLD_H);
+  const { w, h } = worldSize();
+  ink.width = paper.width = w;
+  ink.height = paper.height = h;
+  pctx.fillStyle = "#1A222C";
+  pctx.fillRect(0, 0, w, h);
+  const g = grid();
+  state.pages.forEach((pg) => {
+    const x = pg.gx * PAGE_W - g.ox;
+    const y = pg.gy * PAGE_H - g.oy;
+    pctx.fillStyle = "#F4F0E8";
+    pctx.fillRect(x + 10, y + 10, PAGE_W - 20, PAGE_H - 20);
+    pctx.fillStyle = "rgba(20,24,32,.35)";
+    pctx.font = "22px Segoe UI";
+    pctx.fillText(pg.title, x + 28, y + 42);
+  });
   redrawInk();
+  applyView();
 }
 
+function hardnessMul() {
+  return Number($("hardness").value) / 100;
+}
 function stampAt(ctx, x, y, m, color, size) {
+  const hard = hardnessMul();
   if (m.stamp === "erase") {
     ctx.save();
     ctx.globalCompositeOperation = "destination-out";
@@ -178,29 +204,27 @@ function stampAt(ctx, x, y, m, color, size) {
     return;
   }
   ctx.save();
-  ctx.globalAlpha = m.alpha;
+  ctx.globalAlpha = m.alpha * (0.35 + hard * 0.65);
   ctx.fillStyle = color;
-  ctx.strokeStyle = color;
   if (m.stamp === "soft" || m.wet) {
     ctx.shadowColor = color;
-    ctx.shadowBlur = size * (0.8 + (m.wet || 0));
+    ctx.shadowBlur = size * (1.1 - hard) + (m.wet || 0) * 12;
   }
-  if (m.stamp === "flat") {
-    ctx.fillRect(x - size, y - size * 0.35, size * 2, size * 0.7);
-  } else if (m.stamp === "filbert") {
+  if (m.stamp === "flat") ctx.fillRect(x - size, y - size * 0.35, size * 2, size * 0.7);
+  else if (m.stamp === "filbert") {
     ctx.beginPath();
     ctx.ellipse(x, y, size, size * 0.62, 0, 0, Math.PI * 2);
     ctx.fill();
   } else if (m.stamp === "fan") {
     for (let i = -3; i <= 3; i++) {
-      ctx.globalAlpha = m.alpha * 0.35;
+      ctx.globalAlpha = m.alpha * hard * 0.3;
       ctx.beginPath();
       ctx.arc(x + i * size * 0.22, y, size * 0.28, 0, Math.PI * 2);
       ctx.fill();
     }
   } else if (m.stamp === "grain") {
     for (let i = 0; i < 8; i++) {
-      ctx.globalAlpha = m.alpha * Math.random();
+      ctx.globalAlpha = m.alpha * hard * Math.random();
       ctx.fillRect(x + (Math.random() - 0.5) * size, y + (Math.random() - 0.5) * size, 1.2, 1.2);
     }
   } else if (m.stamp === "taper") {
@@ -211,12 +235,11 @@ function stampAt(ctx, x, y, m, color, size) {
     ctx.fill();
   } else {
     ctx.beginPath();
-    ctx.arc(x, y, size / 2, 0, Math.PI * 2);
+    ctx.arc(x, y, (size / 2) * (0.6 + hard * 0.4), 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
 }
-
 function paintStroke(s) {
   const m = MEDIA.find((x) => x.id === s.media) || media;
   const pts = s.points;
@@ -227,37 +250,35 @@ function paintStroke(s) {
     const steps = Math.max(1, dist / Math.max(1.5, s.size * 0.25));
     for (let t = 0; t < steps; t++) {
       const k = t / steps;
-      stampAt(ictx, prev.x + (p.x - prev.x) * k, prev.y + (p.y - prev.y) * k, m, s.color, s.size);
+      const loc = toLocal(prev.x + (p.x - prev.x) * k, prev.y + (p.y - prev.y) * k);
+      stampAt(ictx, loc.x, loc.y, m, s.color, s.size);
     }
   }
 }
-
 function redrawInk() {
-  ictx.clearRect(0, 0, WORLD_W, WORLD_H);
+  ictx.clearRect(0, 0, ink.width, ink.height);
   for (const s of state.strokes) paintStroke(s);
 }
 
 function renderPieces() {
   const root = $("pins");
   root.innerHTML = "";
-  for (const p of state.pieces) {
+  state.pieces.forEach((p) => {
+    const loc = toLocal(p.x, p.y);
     const el = document.createElement("article");
     el.className = `piece ${p.kind}`;
-    el.style.left = p.x + "px";
-    el.style.top = p.y + "px";
+    el.style.left = loc.x + "px";
+    el.style.top = loc.y + "px";
     el.style.width = p.w + "px";
     el.style.height = p.h + "px";
     if (p.color) el.style.background = p.color;
-    if (p.kind === "photo" && p.src) {
-      el.innerHTML = `<img alt="" src="${p.src}" /><div class="handle"></div>`;
-    } else {
-      el.innerHTML = `<div class="edit" contenteditable="true">${escapeHtml(p.title)}\n${escapeHtml(p.body || "")}</div><div class="handle"></div>`;
-    }
+    if (p.kind === "photo" && p.src) el.innerHTML = `<img alt="" src="${p.src}" /><div class="handle"></div>`;
+    else if (p.kind === "video" && p.src) el.innerHTML = `<video src="${p.src}" controls></video><div class="handle"></div>`;
+    else el.innerHTML = `<div class="edit" contenteditable="true">${escapeHtml(p.title)}\n${escapeHtml(p.body || "")}</div><div class="handle"></div>`;
     bindPiece(el, p);
     root.appendChild(el);
-  }
+  });
 }
-
 function bindPiece(el, p) {
   const edit = el.querySelector(".edit");
   if (edit) {
@@ -269,19 +290,15 @@ function bindPiece(el, p) {
     });
   }
   el.addEventListener("pointerdown", (e) => {
-    if (e.target.classList.contains("handle")) {
-      activePiece = { id: p.id, resize: true, x: e.clientX, y: e.clientY, w: p.w, h: p.h };
-    } else if (e.target.classList.contains("edit")) {
+    if (e.target.classList.contains("handle")) activePiece = { id: p.id, resize: true, x: e.clientX, y: e.clientY, w: p.w, h: p.h };
+    else if (e.target.classList.contains("edit") || e.target.tagName === "VIDEO") {
       activePiece = null;
       return;
-    } else {
-      activePiece = { id: p.id, resize: false, x: e.clientX, y: e.clientY, px: p.x, py: p.y };
-    }
+    } else activePiece = { id: p.id, resize: false, x: e.clientX, y: e.clientY, px: p.x, py: p.y };
     el.setPointerCapture(e.pointerId);
     e.stopPropagation();
   });
 }
-
 function pieceMove(evt) {
   if (!activePiece) return;
   const p = state.pieces.find((x) => x.id === activePiece.id);
@@ -295,17 +312,25 @@ function pieceMove(evt) {
     p.x = activePiece.px + dx;
     p.y = activePiece.py + dy;
     if (p.snap === "nav") {
-      p.x = WORLD_W * 0.04;
-      p.y = WORLD_H * 0.03;
-      p.w = WORLD_W * 0.92;
+      const cell = nearestPage(p.x, p.y);
+      p.x = cell.gx * PAGE_W + PAGE_W * 0.04;
+      p.y = cell.gy * PAGE_H + PAGE_H * 0.04;
+      p.w = PAGE_W * 0.92;
     }
     if (p.snap === "footer") {
-      p.x = WORLD_W * 0.04;
-      p.y = WORLD_H * 0.9;
-      p.w = WORLD_W * 0.92;
+      const cell = nearestPage(p.x, p.y);
+      p.x = cell.gx * PAGE_W + PAGE_W * 0.04;
+      p.y = cell.gy * PAGE_H + PAGE_H * 0.88;
+      p.w = PAGE_W * 0.92;
     }
   }
   renderPieces();
+}
+function nearestPage(x, y) {
+  return state.pages.reduce((best, p) => {
+    const d = Math.hypot(x - (p.gx + 0.5) * PAGE_W, y - (p.gy + 0.5) * PAGE_H);
+    return !best || d < best.d ? { ...p, d } : best;
+  }, null);
 }
 
 function dropPreset(evt, preset, extra) {
@@ -315,93 +340,77 @@ function dropPreset(evt, preset, extra) {
     kind: preset.kind,
     title: preset.title,
     body: preset.body || "",
-    x: Math.max(20, wpt.x - 40),
-    y: Math.max(20, wpt.y - 20),
-    w: preset.w > 1 ? preset.w : WORLD_W * (preset.w || 0.2),
+    x: wpt.x - 30,
+    y: wpt.y - 20,
+    w: preset.w > 1 ? preset.w : PAGE_W * (preset.w || 0.2),
     h: preset.h || 64,
     snap: preset.snap || null,
-    color: extra?.color,
+    color: extra?.color || state.color,
     src: extra?.src,
-    type_id: extra?.type_id,
   };
-  if (piece.snap === "nav") {
-    piece.x = WORLD_W * 0.04;
-    piece.y = WORLD_H * 0.03;
-    piece.w = WORLD_W * 0.92;
-    piece.h = 64;
-  }
-  if (piece.snap === "footer") {
-    piece.x = WORLD_W * 0.04;
-    piece.y = WORLD_H * 0.9;
-    piece.w = WORLD_W * 0.92;
-    piece.h = 64;
+  if (piece.snap) pieceMove({ clientX: 0, clientY: 0 });
+  if (piece.snap === "nav" || piece.snap === "footer") {
+    const cell = nearestPage(piece.x, piece.y) || state.pages[0];
+    piece.x = cell.gx * PAGE_W + PAGE_W * 0.04;
+    piece.y = cell.gy * PAGE_H + (piece.snap === "nav" ? PAGE_H * 0.04 : PAGE_H * 0.88);
+    piece.w = PAGE_W * 0.92;
   }
   state.pieces.push(piece);
   save();
   renderPieces();
-  setStatus(`Placed ${piece.title}.`);
 }
 
-function renderKits() {
-  const left = $("leftKit");
-  left.innerHTML = "";
-  LEFT_PRESETS.forEach((p) => left.appendChild(chip(p)));
-  state.types.forEach((t) => {
-    left.appendChild(
-      chip({ kind: t.kind, title: `${t.symbol} ${t.name}`, body: t.name, w: 180, h: 80, color: t.color }, t),
-    );
-  });
-  const right = $("rightKit");
-  right.innerHTML = "";
-  RIGHT_PRESETS.forEach((p) => right.appendChild(chip(p)));
-  renderPhotos();
-}
-
-function chip(preset, type) {
+function chip(preset, extra) {
   const el = document.createElement("article");
   el.className = `chip ${preset.kind}`;
   el.draggable = true;
-  el.textContent = preset.title;
+  el.textContent = (preset.symbol ? preset.symbol + " " : "") + preset.title;
+  if (extra?.color) el.style.background = extra.color;
+  const pack = { preset, extra };
   el.addEventListener("dragstart", () => {
-    dragPreset = { preset, type };
+    dragPreset = pack;
   });
   el.addEventListener("pointerdown", () => {
-    dragPreset = { preset, type };
+    dragPreset = pack;
   });
   return el;
 }
-
-function renderPhotos() {
-  const root = $("photoKit");
-  root.innerHTML = "";
-  state.photos.forEach((ph) => {
-    const el = document.createElement("article");
-    el.className = "chip photo";
-    el.draggable = true;
-    el.innerHTML = `<img alt="" src="${ph.src}" />`;
-    const preset = { kind: "photo", title: "Photo", body: "", w: 240, h: 160 };
-    el.addEventListener("dragstart", () => {
-      dragPreset = { preset, src: ph.src };
-    });
-    el.addEventListener("pointerdown", () => {
-      dragPreset = { preset, src: ph.src };
-    });
-    root.appendChild(el);
+function renderKits() {
+  $("leftKit").innerHTML = "";
+  LEFT_PRESETS.forEach((p) => $("leftKit").appendChild(chip(p)));
+  state.types.forEach((t) => $("leftKit").appendChild(chip({ kind: t.kind, title: t.name, body: t.name, w: 180, h: 80, symbol: t.symbol }, { color: t.color })));
+  $("rightKit").innerHTML = "";
+  RIGHT_SHAPES.forEach((p) => $("rightKit").appendChild(chip(p, { color: state.color })));
+  $("pageKit").innerHTML = "";
+  state.pages.forEach((pg) => {
+    const b = document.createElement("button");
+    b.className = "tab";
+    b.textContent = `${pg.title} (${pg.gx},${pg.gy})`;
+    b.addEventListener("click", () => panToPage(pg));
+    $("pageKit").appendChild(b);
   });
+  const photos = $("photoKit");
+  photos.innerHTML = "";
+  state.photos.forEach((ph) => {
+    photos.appendChild(chip({ kind: ph.kind || "photo", title: ph.kind === "video" ? "Video" : "Photo", w: 240, h: 160 }, { src: ph.src }));
+  });
+}
+function panToPage(pg) {
+  const vp = $("viewport").getBoundingClientRect();
+  const g = grid();
+  const lx = pg.gx * PAGE_W - g.ox;
+  const ly = pg.gy * PAGE_H - g.oy;
+  view.scale = Math.min(vp.width / PAGE_W, vp.height / PAGE_H) * 0.92;
+  view.x = -lx * view.scale + (vp.width - PAGE_W * view.scale) / 2;
+  view.y = -ly * view.scale + (vp.height - PAGE_H * view.scale) / 2;
+  applyView();
+  closeDrawers();
 }
 
 function renderMedia() {
   const dock = $("mediaDock");
   dock.innerHTML = "";
-  let last = "";
   MEDIA.forEach((m) => {
-    if (m.group !== last) {
-      const tag = document.createElement("span");
-      tag.textContent = m.group;
-      tag.style.cssText = "font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#9AA8BD;padding:8px 4px;";
-      dock.appendChild(tag);
-      last = m.group;
-    }
     const b = document.createElement("button");
     b.type = "button";
     b.textContent = m.label;
@@ -410,113 +419,122 @@ function renderMedia() {
       media = m;
       mode = m.id === "pan" ? "pan" : "draw";
       $("inkWidth").value = String(m.size);
+      $("toolFab").textContent = m.label;
+      $("toolName").textContent = m.label;
       renderMedia();
     });
     dock.appendChild(b);
   });
 }
 
-function renderPalette() {
-  const wells = $("wells");
-  wells.innerHTML = "";
-  PIGMENTS.forEach((c) => {
-    const b = document.createElement("button");
-    b.className = "well";
-    b.style.background = c;
-    b.title = c;
-    b.addEventListener("click", () => setColor(c));
-    wells.appendChild(b);
-  });
-  const plate = $("mixPlate");
-  plate.innerHTML = "";
-  state.mix.forEach((c, i) => {
-    const s = document.createElement("button");
-    s.className = "mix-slot";
-    s.style.background = c || "transparent";
-    s.addEventListener("click", () => {
-      if (!c) state.mix[i] = $("inkColor").value;
-      else setColor(mixHex(c, $("inkColor").value));
-      save();
-      renderPalette();
-    });
-    plate.appendChild(s);
-  });
-  $("mixSwatch").style.background = $("inkColor").value;
+function drawWheel() {
+  const c = $("wheel");
+  const r = c.width / 2;
+  for (let i = 0; i < 360; i++) {
+    wctx.beginPath();
+    wctx.moveTo(r, r);
+    wctx.arc(r, r, r, ((i - 1) * Math.PI) / 180, (i * Math.PI) / 180);
+    wctx.closePath();
+    wctx.fillStyle = `hsl(${i} 90% 50%)`;
+    wctx.fill();
+  }
+  wctx.beginPath();
+  wctx.arc(r, r, r * 0.28, 0, Math.PI * 2);
+  wctx.fillStyle = "#fff";
+  wctx.fill();
 }
-
+function wheelPick(evt) {
+  const r = $("wheel").getBoundingClientRect();
+  const x = evt.clientX - r.left - r.width / 2;
+  const y = evt.clientY - r.top - r.height / 2;
+  const hue = ((Math.atan2(y, x) * 180) / Math.PI + 360) % 360;
+  const sat = Math.min(1, Math.hypot(x, y) / (r.width / 2));
+  if (sat < 0.22) return;
+  const color = hslToHex(hue, 0.9, 0.35 + sat * 0.2);
+  setColor(color);
+}
+function hslToHex(h, s, l) {
+  const a = s * Math.min(l, 1 - l);
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    const c = l - a * Math.max(Math.min(k - 3, 9 - k, 1), -1);
+    return Math.round(255 * c);
+  };
+  return rgbToHex(f(0), f(8), f(4));
+}
 function setColor(c) {
   state.color = c;
   $("inkColor").value = c;
-  $("mixSwatch").style.background = c;
+  $("mixOut").style.background = c;
+  renderKits();
   save();
+}
+function paintMixWells() {
+  $("mixA").style.background = state.mixA;
+  $("mixB").style.background = state.mixB;
+  $("mixOut").style.background = mixHex(state.mixA, state.mixB);
+}
+
+function addPage(dir) {
+  const xs = state.pages.map((p) => p.gx);
+  const ys = state.pages.map((p) => p.gy);
+  let gx = 0;
+  let gy = 0;
+  if (dir === "left") gx = Math.min(...xs) - 1;
+  if (dir === "right") gx = Math.max(...xs) + 1;
+  if (dir === "top") gy = Math.min(...ys) - 1;
+  if (dir === "bottom") gy = Math.max(...ys) + 1;
+  if (dir === "left" || dir === "right") gy = 0;
+  if (dir === "top" || dir === "bottom") gx = 0;
+  const page = { id: uid("pg"), gx, gy, title: `Page ${state.pages.length + 1}` };
+  state.pages.push(page);
+  save();
+  prepCanvases();
+  renderKits();
+  panToPage(page);
+  setStatus(`${page.title} added. Two-finger drag to travel.`);
 }
 
 function renderTypes() {
-  const grid = $("typeGrid");
-  grid.innerHTML = "";
+  const gridEl = $("typeGrid");
+  gridEl.innerHTML = "";
   state.types.forEach((t) => {
     const el = document.createElement("article");
     el.className = "type-card";
-    el.innerHTML = `<strong>${t.symbol} ${t.name}</strong><div>${t.kind}</div>`;
-    el.style.borderLeft = `6px solid ${t.color}`;
-    grid.appendChild(el);
+    el.innerHTML = `<strong>${t.symbol} ${t.name}</strong>`;
+    gridEl.appendChild(el);
   });
 }
-
 function renderColumns() {
   const root = $("columns");
   root.innerHTML = "";
   COLUMNS.forEach((col) => {
     const wrap = document.createElement("section");
-    wrap.className = "column";
     wrap.innerHTML = `<h3>${col.title}</h3>`;
-    wrap.addEventListener("dragover", (e) => e.preventDefault());
-    wrap.addEventListener("drop", (e) => {
-      e.preventDefault();
-      const id = e.dataTransfer.getData("text/sticky-id");
-      if (id) moveCard(id, col.id);
-    });
     (state.columns[col.id] || []).forEach((card) => {
       const el = document.createElement("article");
       el.className = "card";
-      el.draggable = true;
-      el.innerHTML = `<strong>${escapeHtml(card.title)}</strong><div>${escapeHtml(card.body || "")}</div>`;
-      el.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/sticky-id", card.id));
+      el.textContent = card.title;
       wrap.appendChild(el);
     });
     root.appendChild(wrap);
   });
 }
-
-function moveCard(id, columnId) {
-  let found = null;
-  COLUMNS.forEach((c) => {
-    const i = state.columns[c.id].findIndex((x) => x.id === id);
-    if (i >= 0) found = state.columns[c.id].splice(i, 1)[0];
-  });
-  if (found) state.columns[columnId].push(found);
-  save();
-  renderColumns();
-}
-
 function escapeHtml(s) {
-  return String(s || "")
-    .replaceAll("&", "&")
-    .replaceAll("<", "<")
-    .replaceAll(">", ">");
+  return String(s || "").replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">");
 }
-
 function showSection(name) {
   state.section = name;
-  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("is-on", b.dataset.section === name));
+  document.querySelectorAll("#pageMenu .tab").forEach((b) => b.classList.toggle("is-on", b.dataset.section === name));
   document.querySelectorAll(".view").forEach((v) => {
     const on = v.id === `view-${name}`;
     v.classList.toggle("is-on", on);
     v.hidden = !on;
   });
+  $("pageMenu").hidden = true;
   if (name === "sketch") requestAnimationFrame(() => {
-    fitView();
     prepCanvases();
+    fitView();
     renderPieces();
   });
   save();
@@ -524,36 +542,26 @@ function showSection(name) {
 
 function startDraw(evt) {
   if (activePiece || evt.target.closest(".piece")) return;
-  if (mode === "pan" || (evt.pointerType !== "pen" && pointers.size >= 1 && !drawing)) {
-    pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
-    return;
-  }
-  if (dragPreset && evt.type === "pointerup") return;
+  pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
+  if (mode === "pan" || pointers.size > 1) return;
   const w = screenToWorld(evt);
   drawing = true;
-  stroke = {
-    media: media.id,
-    color: $("inkColor").value,
-    size: Number($("inkWidth").value),
-    points: [{ x: w.x, y: w.y }],
-  };
-  $("viewport").setPointerCapture(evt.pointerId);
+  stroke = { media: media.id, color: state.color, size: Number($("inkWidth").value), hard: hardnessMul(), points: [{ x: w.x, y: w.y }] };
 }
-
 function moveDraw(evt) {
   if (activePiece) {
     pieceMove(evt);
     return;
   }
-  if (pointers.has(evt.pointerId) && !drawing) {
+  if (pointers.has(evt.pointerId) && (!drawing || pointers.size > 1 || mode === "pan")) {
     const prev = pointers.get(evt.pointerId);
     if (pointers.size === 1) {
       view.x += evt.clientX - prev.x;
       view.y += evt.clientY - prev.y;
       applyView();
     } else if (pointers.size === 2) {
-      const pts = [...pointers.values()];
-      const oldD = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y) || 1;
+      const before = [...pointers.values()];
+      const oldD = Math.hypot(before[0].x - before[1].x, before[0].y - before[1].y) || 1;
       pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
       const now = [...pointers.values()];
       const newD = Math.hypot(now[0].x - now[1].x, now[0].y - now[1].y) || 1;
@@ -568,9 +576,8 @@ function moveDraw(evt) {
   stroke.points.push({ x: w.x, y: w.y });
   paintStroke({ ...stroke, points: stroke.points.slice(-2) });
 }
-
-function endDraw(evt) {
-  pointers.delete(evt.pointerId);
+function endDraw() {
+  pointers.clear();
   if (activePiece) {
     activePiece = null;
     save();
@@ -583,60 +590,50 @@ function endDraw(evt) {
   stroke = null;
   drawing = false;
 }
-
 function zoomAt(cx, cy, factor) {
   const vp = $("viewport").getBoundingClientRect();
-  const wx = (cx - vp.left - view.x) / view.scale;
-  const wy = (cy - vp.top - view.y) / view.scale;
-  view.scale = Math.min(8, Math.max(0.12, view.scale * factor));
-  view.x = cx - vp.left - wx * view.scale;
-  view.y = cy - vp.top - wy * view.scale;
+  const g = grid();
+  const wx = (cx - vp.left - view.x) / view.scale + g.ox;
+  const wy = (cy - vp.top - view.y) / view.scale + g.oy;
+  view.scale = Math.min(8, Math.max(0.08, view.scale * factor));
+  view.x = cx - vp.left - (wx - g.ox) * view.scale;
+  view.y = cy - vp.top - (wy - g.oy) * view.scale;
   applyView();
 }
 
-function toggleMax() {
-  const studio = $("studio");
-  const go = !document.fullscreenElement;
-  const req = go ? studio.requestFullscreen?.() || document.documentElement.requestFullscreen?.() : document.exitFullscreen?.();
-  Promise.resolve(req).catch(() => {});
-  document.body.classList.toggle("is-max", go);
-  setTimeout(() => {
-    fitView();
-    setStatus(go ? "Full screen. Rotate to landscape if you want more canvas." : "Chrome back.");
-  }, 200);
+function toggleDrawer(side) {
+  const el = $(side === "left" ? "leftDrawer" : "rightDrawer");
+  const other = $(side === "left" ? "rightDrawer" : "leftDrawer");
+  const open = !el.classList.contains("is-open");
+  el.classList.toggle("is-open", open);
+  other.classList.remove("is-open");
+  $("dim").hidden = !open;
+}
+function closeDrawers() {
+  $("leftDrawer").classList.remove("is-open");
+  $("rightDrawer").classList.remove("is-open");
+  $("dim").hidden = true;
+  $("addMenu").hidden = true;
+  $("pageMenu").hidden = true;
 }
 
 function htmlToMarkdown(html) {
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  const walk = (node) => {
-    if (node.nodeType === 3) return node.textContent;
-    if (node.nodeName === "BR") return "\n";
-    const inner = [...node.childNodes].map(walk).join("");
-    if (node.nodeName === "H2") return `## ${inner.trim()}\n\n`;
-    if (node.nodeName === "P") return `${inner.trim()}\n\n`;
-    if (node.nodeName === "LI") return `- ${inner.trim()}\n`;
-    return inner;
-  };
-  return walk(tmp).trim() + "\n";
+  return tmp.innerText + "\n";
 }
 function download(name, blob) {
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = name;
   a.click();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1200);
 }
 function slug(s) {
   return (s || "noteboard").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "noteboard";
 }
 function exportMd() {
   save();
-  const pins = state.pieces.map((p) => `- ${p.kind}: ${p.title}`).join("\n") || "- none";
-  download(
-    slug(state.doc_title) + ".md",
-    new Blob([`# ${state.doc_title}\n\n${pins}\n\n${htmlToMarkdown(state.doc_html)}\n`], { type: "text/markdown" }),
-  );
+  download(slug(state.doc_title) + ".md", new Blob([`# ${state.doc_title}\n\n${htmlToMarkdown(state.doc_html)}`], { type: "text/markdown" }));
 }
 function crc32(buf) {
   let c = ~0;
@@ -682,23 +679,15 @@ function zipStore(files) {
 }
 function exportDocx() {
   save();
-  const text = `${state.doc_title}\n${$("editor").innerText}`;
-  const paras = text.split("\n").map((line) => `<w:p><w:r><w:t xml:space="preserve">${line.replaceAll("&", "&").replaceAll("<", "<")}</w:t></w:r></w:p>`).join("");
-  const documentXml = `<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}</w:body></w:document>`;
-  const types = `<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
-  const rels = `<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
-  download(slug(state.doc_title) + ".docx", new Blob([zipStore([{ name: "[Content_Types].xml", data: types }, { name: "_rels/.rels", data: rels }, { name: "word/document.xml", data: documentXml }])], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+  const paras = ($("editor").innerText || "").split("\n").map((l) => `<w:p><w:r><w:t>${l.replaceAll("&", "&").replaceAll("<", "<")}</w:t></w:r></w:p>`).join("");
+  const documentXml = `<?xml version="1.0"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${paras}</w:body></w:document>`;
+  const types = `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>`;
+  const rels = `<?xml version="1.0"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+  download(slug(state.doc_title) + ".docx", new Blob([zipStore([{ name: "[Content_Types].xml", data: types }, { name: "_rels/.rels", data: rels }, { name: "word/document.xml", data: documentXml }])]));
 }
 function exportFigma() {
   save();
-  const spec = {
-    schema: "red-noteboard-figma-handoff-v1",
-    live_figma_file: false,
-    sku: "Working",
-    session_id: state.session_id,
-    frame: { name: state.session_title, width: WORLD_W, height: WORLD_H, children: state.pieces.map((p) => ({ id: p.id, type: p.kind.toUpperCase(), x: p.x, y: p.y, width: p.w, height: p.h, characters: `${p.title}\n${p.body || ""}` })) },
-  };
-  download(slug(state.session_title) + ".figma-handoff.json", new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }));
+  download(slug(state.session_title) + ".figma-handoff.json", new Blob([JSON.stringify({ schema: "red-noteboard-figma-handoff-v1", live_figma_file: false, pages: state.pages, pieces: state.pieces }, null, 2)], { type: "application/json" }));
 }
 
 function bind() {
@@ -706,25 +695,69 @@ function bind() {
   $("docTitle").value = state.doc_title;
   $("editor").innerHTML = state.doc_html;
   $("inkColor").value = state.color;
-  document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
-  document.querySelectorAll(".drawer-toggle").forEach((b) => {
-    b.addEventListener("click", () => {
-      const side = b.dataset.side;
-      const drawer = $(side === "left" ? "leftDrawer" : "rightDrawer");
-      drawer.classList.toggle("is-open");
-      $("studio").classList.toggle(side + "-closed", !drawer.classList.contains("is-open"));
-    });
+  $("hardness").value = String(state.hardness || 72);
+  $("toolFab").textContent = media.label;
+  document.querySelectorAll("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
+  $("btnPages").addEventListener("click", () => {
+    $("pageMenu").hidden = !$("pageMenu").hidden;
+    $("addMenu").hidden = true;
   });
-  $("btnZoomIn").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 1.25));
-  $("btnZoomOut").addEventListener("click", () => zoomAt(innerWidth / 2, innerHeight / 2, 0.8));
-  $("btnFit").addEventListener("click", fitView);
-  $("btnMax").addEventListener("click", toggleMax);
+  $("btnAdd").addEventListener("click", () => {
+    $("addMenu").hidden = !$("addMenu").hidden;
+    $("pageMenu").hidden = true;
+  });
+  $("btnLeft").addEventListener("click", () => toggleDrawer("left"));
+  $("btnRight").addEventListener("click", () => toggleDrawer("right"));
+  $("dim").addEventListener("click", closeDrawers);
+  $("toolFab").addEventListener("click", () => {
+    $("toolSheet").hidden = !$("toolSheet").hidden;
+  });
   $("btnUndo").addEventListener("click", () => {
     state.strokes.pop();
     redrawInk();
     save();
   });
-  $("inkColor").addEventListener("input", () => setColor($("inkColor").value));
+  $("btnFit").addEventListener("click", fitView);
+  $("btnMax").addEventListener("click", () => {
+    const go = !document.fullscreenElement;
+    Promise.resolve(go ? $("studio").requestFullscreen?.() : document.exitFullscreen?.()).catch(() => {});
+    document.body.classList.toggle("is-max", go);
+  });
+  $("wheel").addEventListener("pointerdown", wheelPick);
+  $("mixA").addEventListener("click", () => {
+    state.mixA = state.color;
+    paintMixWells();
+    save();
+  });
+  $("mixB").addEventListener("click", () => {
+    state.mixB = state.color;
+    paintMixWells();
+    save();
+  });
+  $("mixOut").addEventListener("click", () => setColor(mixHex(state.mixA, state.mixB)));
+  document.querySelectorAll("[data-add]").forEach((b) => {
+    b.addEventListener("click", () => {
+      const kind = b.dataset.add;
+      $("addMenu").hidden = true;
+      if (kind === "image" || kind === "video") {
+        addTarget = kind;
+        $("fileImport").accept = kind === "video" ? "video/*" : "image/*";
+        $("fileImport").click();
+      } else addPage(kind);
+    });
+  });
+  $("fileImport").addEventListener("change", (e) => {
+    [...e.target.files || []].forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        state.photos.push({ id: uid("ph"), kind: addTarget, src: String(reader.result) });
+        save();
+        renderKits();
+        setStatus(`${addTarget} in the left drawer. Drag it onto the canvas.`);
+      };
+      reader.readAsDataURL(file);
+    });
+  });
   const vp = $("viewport");
   vp.addEventListener("pointerdown", startDraw);
   vp.addEventListener("pointermove", moveDraw);
@@ -734,31 +767,16 @@ function bind() {
     e.preventDefault();
     zoomAt(e.clientX, e.clientY, e.deltaY > 0 ? 0.9 : 1.1);
   }, { passive: false });
-  vp.addEventListener("dblclick", toggleMax);
   vp.addEventListener("dragover", (e) => e.preventDefault());
   vp.addEventListener("drop", (e) => {
     e.preventDefault();
-    if (dragPreset) dropPreset(e, dragPreset.preset, { src: dragPreset.src, color: dragPreset.type?.color, type_id: dragPreset.type?.id });
+    if (dragPreset) dropPreset(e, dragPreset.preset, dragPreset.extra);
     dragPreset = null;
-  });
-  $("fileImport").addEventListener("change", (e) => {
-    [...e.target.files || []].forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        state.photos.push({ id: uid("ph"), src: String(reader.result) });
-        save();
-        renderPhotos();
-      };
-      reader.readAsDataURL(file);
-    });
   });
   $("btnAddType").addEventListener("click", () => {
     const name = prompt("Type name", "Callout");
     if (!name) return;
-    const symbol = prompt("Symbol", "◆") || "◆";
-    const kind = prompt("Kind: sticky, textbox, shape, symbol, photo", "shape") || "shape";
-    const color = prompt("Color hex", "#E0E7FF") || "#E0E7FF";
-    state.types.push({ id: uid("t"), name, kind, symbol, color });
+    state.types.push({ id: uid("t"), name, kind: "shape", symbol: prompt("Symbol", "◆") || "◆", color: state.color });
     save();
     renderTypes();
     renderKits();
@@ -766,7 +784,7 @@ function bind() {
   $("btnAddSticky").addEventListener("click", () => {
     const title = prompt("Piece title", "New piece");
     if (!title) return;
-    state.columns.todo.push({ id: uid("st"), title, body: prompt("Body", "") || "", type_id: state.types[0]?.id });
+    state.columns.todo.push({ id: uid("st"), title, body: "", type_id: "t-note" });
     save();
     renderColumns();
   });
@@ -775,24 +793,20 @@ function bind() {
   $("btnExportFigma").addEventListener("click", exportFigma);
   document.querySelectorAll("[data-cmd]").forEach((b) => b.addEventListener("click", () => document.execCommand(b.dataset.cmd, false)));
   $("sessionTitle").addEventListener("change", save);
-  $("editor").addEventListener("input", save);
   document.addEventListener("fullscreenchange", () => {
     document.body.classList.toggle("is-max", !!document.fullscreenElement);
-    setTimeout(fitView, 150);
-  });
-  window.addEventListener("resize", () => {
-    if (state.section === "sketch") applyView();
+    setTimeout(fitView, 120);
   });
 }
 
 bind();
+drawWheel();
+paintMixWells();
 renderMedia();
-renderPalette();
 renderKits();
 renderTypes();
 renderColumns();
-showSection("sketch");
 prepCanvases();
 fitView();
 renderPieces();
-setStatus("Studio ready. Mix a color, pick a brush, pinch to zoom, double-tap for full screen.");
+setStatus("Canvas is the page. Pieces and Shapes start closed.");
