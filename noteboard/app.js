@@ -1,4 +1,4 @@
-const STORAGE = "red-noteboard-working-v1";
+const STORAGE = "red-noteboard-working-v2";
 const COLUMNS = [
   { id: "todo", title: "To Do" },
   { id: "doing", title: "Doing" },
@@ -7,20 +7,64 @@ const COLUMNS = [
 
 const seedCards = {
   todo: [
-    { id: "st-login", title: "Sign-in strip", body: "Customer asked for a quiet login, not a wall of SSO." },
-    { id: "st-photo", title: "Import paper photo", body: "Photograph the napkin sketch in the meeting." },
+    { id: "st-login", title: "Sign-in strip", body: "Quiet login. Not a wall of SSO." },
+    { id: "st-photo", title: "Import paper photo", body: "Photograph the napkin in the meeting." },
   ],
-  doing: [
-    { id: "st-frame", title: "Tablet drawing frame", body: "Stylus first. Mouse still works on desktop." },
-  ],
-  done: [
-    { id: "st-name", title: "Name the object board_session", body: "IDs not titles as keys." },
-  ],
+  doing: [{ id: "st-frame", title: "Tablet drawing frame", body: "Stylus first. Mouse still works." }],
+  done: [{ id: "st-name", title: "Name the object board_session", body: "IDs not titles as keys." }],
 };
 
 const defaultDoc = `<h2>Walkthrough notes</h2>
-<p>What the customer drew. What they asked to change. What we will build next.</p>
-<ul><li>Keep the frame on the table.</li><li>Drop a sticky when a feature is named.</li></ul>`;
+<p>What they drew. What they asked to change. What we build next.</p>
+<ul><li>Keep the page open on the table.</li><li>Pin a sticky when a feature is named.</li></ul>`;
+
+function uid(prefix) {
+  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+function blankSketch(title) {
+  return { id: uid("pg"), title, strokes: [], shapes: [], paper_image: null, pins: [] };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE);
+    if (raw) return JSON.parse(raw);
+    const old = localStorage.getItem("red-noteboard-working-v1");
+    if (old) {
+      const o = JSON.parse(old);
+      return {
+        session_id: o.session_id || "sess-001",
+        session_title: o.session_title || "Customer walkthrough",
+        section: "sketch",
+        sketchPages: [
+          {
+            id: "pg-sketch-1",
+            title: "Page 1",
+            strokes: o.strokes || [],
+            shapes: o.shapes || [],
+            paper_image: o.paper_image || null,
+            pins: o.pins || [],
+          },
+        ],
+        sketchIndex: 0,
+        notePages: [{ id: o.doc_id || "doc-001", title: o.doc_title || "Meeting notes", html: o.doc_html || defaultDoc }],
+        noteIndex: 0,
+        columns: o.columns || structuredClone(seedCards),
+      };
+    }
+  } catch (_) {}
+  return {
+    session_id: "sess-001",
+    session_title: "Customer walkthrough",
+    section: "sketch",
+    sketchPages: [blankSketch("Page 1")],
+    sketchIndex: 0,
+    notePages: [{ id: "doc-001", title: "Meeting notes", html: defaultDoc }],
+    noteIndex: 0,
+    columns: structuredClone(seedCards),
+  };
+}
 
 const state = loadState();
 let tool = "pen";
@@ -35,45 +79,89 @@ const ink = $("ink");
 const paper = $("paper");
 const inkCtx = ink.getContext("2d");
 const paperCtx = paper.getContext("2d");
-const statusEl = $("status");
 
-function uid(prefix) {
-  return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+function sketch() {
+  return state.sketchPages[state.sketchIndex];
 }
-
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
-  return {
-    session_id: "sess-001",
-    session_title: "Customer walkthrough",
-    paper_image: null,
-    strokes: [],
-    shapes: [],
-    columns: structuredClone(seedCards),
-    pins: [],
-    doc_id: "doc-001",
-    doc_title: "Meeting notes",
-    doc_html: defaultDoc,
-  };
+function note() {
+  return state.notePages[state.noteIndex];
 }
 
 function save() {
-  state.session_title = $("sessionTitle").value.trim() || "Untitled session";
-  state.doc_title = $("docTitle").value.trim() || "Meeting notes";
-  state.doc_html = $("editor").innerHTML;
+  state.session_title = $("sessionTitle").value.trim() || "Untitled notebook";
+  if ($("docTitle")) note().title = $("docTitle").value.trim() || "Untitled page";
+  if ($("editor")) note().html = $("editor").innerHTML;
   localStorage.setItem(STORAGE, JSON.stringify(state));
-  statusEl.textContent = "Saved on this device.";
+  $("status").textContent = "Saved on this device.";
 }
 
 function setStatus(msg) {
-  statusEl.textContent = msg;
+  $("status").textContent = msg;
+}
+
+function showSection(name) {
+  state.section = name;
+  document.querySelectorAll(".stab[data-section]").forEach((b) => b.classList.toggle("is-on", b.dataset.section === name));
+  document.querySelectorAll(".view").forEach((v) => {
+    const on = v.id === `view-${name}`;
+    v.classList.toggle("is-on", on);
+    v.hidden = !on;
+  });
+  renderPages();
+  if (name === "sketch") requestAnimationFrame(resizeCanvases);
+  if (name === "notes") {
+    $("docTitle").value = note().title;
+    $("editor").innerHTML = note().html;
+  }
+  save();
+}
+
+function renderPages() {
+  const list = $("pageList");
+  list.innerHTML = "";
+  const rows =
+    state.section === "notes"
+      ? state.notePages.map((p, i) => ({ title: p.title, on: i === state.noteIndex, go: () => openNote(i) }))
+      : state.section === "sketch"
+        ? state.sketchPages.map((p, i) => ({ title: p.title, on: i === state.sketchIndex, go: () => openSketch(i) }))
+        : [{ title: state.section === "board" ? "Harbor" : "Handoff", on: true, go: () => {} }];
+  rows.forEach((row) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "page-tab" + (row.on ? " is-on" : "");
+    b.textContent = row.title;
+    b.addEventListener("click", row.go);
+    list.appendChild(b);
+  });
+}
+
+function openSketch(i) {
+  state.sketchIndex = i;
+  showSection("sketch");
+  redraw();
+}
+function openNote(i) {
+  if ($("editor")) note().html = $("editor").innerHTML;
+  state.noteIndex = i;
+  showSection("notes");
+}
+
+function addPage() {
+  if (state.section === "notes") {
+    state.notePages.push({ id: uid("doc"), title: `Notes ${state.notePages.length + 1}`, html: "<p></p>" });
+    state.noteIndex = state.notePages.length - 1;
+    showSection("notes");
+  } else {
+    state.sketchPages.push(blankSketch(`Page ${state.sketchPages.length + 1}`));
+    state.sketchIndex = state.sketchPages.length - 1;
+    showSection("sketch");
+  }
+  setStatus("New page added.");
 }
 
 function resizeCanvases() {
   const frame = $("frame");
+  if (!frame || state.section !== "sketch") return;
   const rect = frame.getBoundingClientRect();
   for (const c of [ink, paper]) {
     c.width = Math.max(1, Math.floor(rect.width * devicePixelRatio));
@@ -89,40 +177,40 @@ function framePoint(evt) {
   return {
     x: ((evt.clientX - r.left) / r.width) * ink.width,
     y: ((evt.clientY - r.top) / r.height) * ink.height,
-    cssX: evt.clientX - r.left,
-    cssY: evt.clientY - r.top,
-    cssW: r.width,
-    cssH: r.height,
   };
 }
 
 function redraw() {
+  if (!ink.width) return;
   paperCtx.clearRect(0, 0, paper.width, paper.height);
   inkCtx.clearRect(0, 0, ink.width, ink.height);
-  if (state.paper_image) {
+  const pg = sketch();
+  if (pg.paper_image) {
     const img = new Image();
     img.onload = () => {
       const scale = Math.min(paper.width / img.width, paper.height / img.height);
       const w = img.width * scale;
       const h = img.height * scale;
-      paperCtx.globalAlpha = 0.72;
+      paperCtx.globalAlpha = 0.78;
       paperCtx.drawImage(img, (paper.width - w) / 2, (paper.height - h) / 2, w, h);
       paperCtx.globalAlpha = 1;
     };
-    img.src = state.paper_image;
+    img.src = pg.paper_image;
   }
-  for (const s of state.strokes) {
+  for (const s of pg.strokes) {
     inkCtx.strokeStyle = s.color;
     inkCtx.lineWidth = s.width * devicePixelRatio;
     inkCtx.lineCap = "round";
     inkCtx.lineJoin = "round";
+    inkCtx.globalAlpha = s.highlight ? 0.35 : 1;
     inkCtx.globalCompositeOperation = s.erase ? "destination-out" : "source-over";
     inkCtx.beginPath();
     s.points.forEach((p, i) => (i ? inkCtx.lineTo(p.x, p.y) : inkCtx.moveTo(p.x, p.y)));
     inkCtx.stroke();
   }
+  inkCtx.globalAlpha = 1;
   inkCtx.globalCompositeOperation = "source-over";
-  for (const sh of state.shapes) {
+  for (const sh of pg.shapes) {
     inkCtx.strokeStyle = sh.color;
     inkCtx.lineWidth = 3 * devicePixelRatio;
     const x = sh.x * ink.width;
@@ -139,46 +227,11 @@ function redraw() {
   renderPins();
 }
 
-function renderColumns() {
-  const root = $("columns");
-  root.innerHTML = "";
-  for (const col of COLUMNS) {
-    const wrap = document.createElement("section");
-    wrap.className = "column";
-    wrap.dataset.col = col.id;
-    wrap.innerHTML = `<h3>${col.title} · ${state.columns[col.id].length}</h3>`;
-    wrap.addEventListener("dragover", (e) => e.preventDefault());
-    wrap.addEventListener("drop", (e) => {
-      e.preventDefault();
-      const id = e.dataTransfer.getData("text/sticky-id");
-      if (id) moveCard(id, col.id);
-    });
-    for (const card of state.columns[col.id]) {
-      const el = document.createElement("article");
-      el.className = "card";
-      el.draggable = true;
-      el.dataset.id = card.id;
-      el.dataset.col = col.id;
-      el.innerHTML = `<strong>${escapeHtml(card.title)}</strong><small>${escapeHtml(card.body)}</small>`;
-      el.addEventListener("dragstart", (e) => {
-        dragSticky = card;
-        e.dataTransfer.setData("text/sticky-id", card.id);
-        e.dataTransfer.effectAllowed = "copyMove";
-      });
-      el.addEventListener("pointerdown", () => {
-        dragSticky = card;
-      });
-      wrap.appendChild(el);
-    }
-    root.appendChild(wrap);
-  }
-}
-
 function renderPins() {
   const root = $("pins");
   root.innerHTML = "";
   const rect = $("frame").getBoundingClientRect();
-  for (const pin of state.pins) {
+  for (const pin of sketch().pins) {
     const el = document.createElement("article");
     el.className = "pin";
     el.style.left = `${pin.x * rect.width}px`;
@@ -193,14 +246,71 @@ function renderPins() {
   }
 }
 
+function allCards() {
+  return COLUMNS.flatMap((c) => state.columns[c.id].map((card) => ({ ...card, col: c.id })));
+}
+
+function renderColumns() {
+  const root = $("columns");
+  root.innerHTML = "";
+  for (const col of COLUMNS) {
+    const wrap = document.createElement("section");
+    wrap.className = "column";
+    wrap.innerHTML = `<h3>${col.title} · ${state.columns[col.id].length}</h3>`;
+    wrap.addEventListener("dragover", (e) => e.preventDefault());
+    wrap.addEventListener("drop", (e) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData("text/sticky-id");
+      if (id) moveCard(id, col.id);
+    });
+    for (const card of state.columns[col.id]) {
+      wrap.appendChild(cardEl(card, col.id));
+    }
+    root.appendChild(wrap);
+  }
+  renderTray();
+}
+
+function cardEl(card, col) {
+  const el = document.createElement("article");
+  el.className = "card";
+  el.draggable = true;
+  el.dataset.id = card.id;
+  el.dataset.col = col;
+  el.innerHTML = `<strong>${escapeHtml(card.title)}</strong><small>${escapeHtml(card.body)}</small>`;
+  bindDrag(el, card);
+  return el;
+}
+
+function renderTray() {
+  const root = $("trayCards");
+  root.innerHTML = "";
+  for (const card of allCards()) {
+    const el = document.createElement("article");
+    el.className = "mini";
+    el.draggable = true;
+    el.innerHTML = escapeHtml(card.title);
+    bindDrag(el, card);
+    root.appendChild(el);
+  }
+}
+
+function bindDrag(el, card) {
+  el.addEventListener("dragstart", (e) => {
+    dragSticky = card;
+    e.dataTransfer.setData("text/sticky-id", card.id);
+    e.dataTransfer.effectAllowed = "copyMove";
+  });
+  el.addEventListener("pointerdown", () => {
+    dragSticky = card;
+  });
+}
+
 function moveCard(id, columnId) {
   let found = null;
   for (const col of COLUMNS) {
     const idx = state.columns[col.id].findIndex((c) => c.id === id);
-    if (idx >= 0) {
-      found = state.columns[col.id].splice(idx, 1)[0];
-      break;
-    }
+    if (idx >= 0) found = state.columns[col.id].splice(idx, 1)[0];
   }
   if (!found) return;
   state.columns[columnId].push(found);
@@ -227,18 +337,26 @@ function escapeHtml(s) {
 function startInk(evt) {
   if (evt.target.closest(".pin")) return;
   const p = framePoint(evt);
-  if (tool === "pen" || tool === "eraser") {
+  if (tool === "pen" || tool === "eraser" || tool === "highlighter") {
     drawing = true;
     currentStroke = {
-      color: $("inkColor").value,
-      width: Number($("inkWidth").value),
+      color: tool === "highlighter" ? $("inkColor").value : $("inkColor").value,
+      width: tool === "highlighter" ? Math.max(14, Number($("inkWidth").value) * 2) : Number($("inkWidth").value),
       erase: tool === "eraser",
+      highlight: tool === "highlighter",
       points: [{ x: p.x, y: p.y }],
     };
     ink.setPointerCapture(evt.pointerId);
   } else if (tool === "rect" || tool === "ellipse") {
     drawing = true;
-    shapeDraft = { kind: tool, color: $("inkColor").value, x0: p.x / ink.width, y0: p.y / ink.height, x1: p.x / ink.width, y1: p.y / ink.height };
+    shapeDraft = {
+      kind: tool,
+      color: $("inkColor").value,
+      x0: p.x / ink.width,
+      y0: p.y / ink.height,
+      x1: p.x / ink.width,
+      y1: p.y / ink.height,
+    };
     ink.setPointerCapture(evt.pointerId);
   }
 }
@@ -246,10 +364,10 @@ function startInk(evt) {
 function moveInk(evt) {
   if (pinDrag) {
     const r = $("frame").getBoundingClientRect();
-    const pin = state.pins.find((x) => x.id === pinDrag.id);
+    const pin = sketch().pins.find((x) => x.id === pinDrag.id);
     if (pin) {
-      pin.x = Math.min(0.82, Math.max(0, pinDrag.ox + (evt.clientX - pinDrag.dx) / r.width));
-      pin.y = Math.min(0.82, Math.max(0, pinDrag.oy + (evt.clientY - pinDrag.dy) / r.height));
+      pin.x = Math.min(0.8, Math.max(0, pinDrag.ox + (evt.clientX - pinDrag.dx) / r.width));
+      pin.y = Math.min(0.8, Math.max(0, pinDrag.oy + (evt.clientY - pinDrag.dy) / r.height));
       renderPins();
     }
     return;
@@ -259,16 +377,6 @@ function moveInk(evt) {
   if (currentStroke) {
     currentStroke.points.push({ x: p.x, y: p.y });
     redraw();
-    inkCtx.strokeStyle = currentStroke.color;
-    inkCtx.lineWidth = currentStroke.width * devicePixelRatio;
-    inkCtx.lineCap = "round";
-    inkCtx.globalCompositeOperation = currentStroke.erase ? "destination-out" : "source-over";
-    const pts = currentStroke.points;
-    inkCtx.beginPath();
-    inkCtx.moveTo(pts[0].x, pts[0].y);
-    pts.forEach((pt) => inkCtx.lineTo(pt.x, pt.y));
-    inkCtx.stroke();
-    inkCtx.globalCompositeOperation = "source-over";
   }
   if (shapeDraft) {
     shapeDraft.x1 = p.x / ink.width;
@@ -276,26 +384,20 @@ function moveInk(evt) {
   }
 }
 
-function endInk(evt) {
+function endInk() {
   if (pinDrag) {
     pinDrag = null;
     save();
     return;
   }
-  const p = framePoint(evt);
-  if (dragSticky && tool !== "pen") {
-    // drop if released on frame
-  }
-  if (currentStroke && currentStroke.points.length > 1) {
-    state.strokes.push(currentStroke);
-  }
+  if (currentStroke && currentStroke.points.length > 1) sketch().strokes.push(currentStroke);
   if (shapeDraft) {
     const x = Math.min(shapeDraft.x0, shapeDraft.x1);
     const y = Math.min(shapeDraft.y0, shapeDraft.y1);
     const w = Math.abs(shapeDraft.x1 - shapeDraft.x0);
     const h = Math.abs(shapeDraft.y1 - shapeDraft.y0);
     if (w > 0.01 && h > 0.01) {
-      state.shapes.push({ id: uid("sh"), kind: shapeDraft.kind, color: shapeDraft.color, x, y, w, h });
+      sketch().shapes.push({ id: uid("sh"), kind: shapeDraft.kind, color: shapeDraft.color, x, y, w, h });
     }
   }
   currentStroke = null;
@@ -308,23 +410,21 @@ function endInk(evt) {
 function dropOnFrame(evt) {
   evt.preventDefault();
   const id = evt.dataTransfer?.getData("text/sticky-id");
-  const card = id
-    ? COLUMNS.map((c) => state.columns[c.id].find((x) => x.id === id)).find(Boolean)
-    : dragSticky;
+  const card = id ? allCards().find((c) => c.id === id) : dragSticky;
   if (!card) return;
   const r = $("frame").getBoundingClientRect();
-  state.pins.push({
+  sketch().pins.push({
     id: uid("pin"),
     sticky_id: card.id,
     title: card.title,
     body: card.body,
-    x: Math.min(0.75, Math.max(0.02, (evt.clientX - r.left) / r.width)),
-    y: Math.min(0.75, Math.max(0.02, (evt.clientY - r.top) / r.height)),
+    x: Math.min(0.72, Math.max(0.08, (evt.clientX - r.left) / r.width)),
+    y: Math.min(0.72, Math.max(0.08, (evt.clientY - r.top) / r.height)),
   });
   dragSticky = null;
   save();
   renderPins();
-  setStatus(`Pinned “${card.title}” on the frame.`);
+  setStatus(`Pinned “${card.title}”.`);
 }
 
 function htmlToMarkdown(html) {
@@ -353,11 +453,15 @@ function download(name, blob) {
   setTimeout(() => URL.revokeObjectURL(a.href), 1500);
 }
 
+function slug(s) {
+  return (s || "noteboard").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "noteboard";
+}
+
 function exportMd() {
   save();
-  const pins = state.pins.map((p) => `- ${p.title}: ${p.body}`).join("\n") || "- (none yet)";
-  const md = `# ${state.doc_title}\n\nSession: ${state.session_title}  \nSession ID: ${state.session_id}\nSKU: Working\n\n## Pinned features\n${pins}\n\n## Notes\n${htmlToMarkdown(state.doc_html)}\n`;
-  download(slug(state.doc_title) + ".md", new Blob([md], { type: "text/markdown" }));
+  const pins = sketch().pins.map((p) => `- ${p.title}: ${p.body}`).join("\n") || "- (none yet)";
+  const md = `# ${note().title}\n\nNotebook: ${state.session_title}  \nSession ID: ${state.session_id}\nSKU: Working\n\n## Pinned features\n${pins}\n\n## Notes\n${htmlToMarkdown(note().html)}\n`;
+  download(slug(note().title) + ".md", new Blob([md], { type: "text/markdown" }));
   setStatus("Downloaded Markdown.");
 }
 
@@ -369,7 +473,6 @@ function crc32(buf) {
   }
   return ~c >>> 0;
 }
-
 function u16(n) {
   return Uint8Array.of(n & 255, (n >>> 8) & 255);
 }
@@ -386,7 +489,6 @@ function cat(parts) {
   }
   return out;
 }
-
 function zipStore(files) {
   const enc = new TextEncoder();
   const locals = [];
@@ -418,7 +520,6 @@ function zipStore(files) {
   ]);
   return cat([body, dir, end]);
 }
-
 function xmlEscape(s) {
   return String(s).replaceAll("&", "&").replaceAll("<", "<").replaceAll(">", ">");
 }
@@ -426,7 +527,7 @@ function xmlEscape(s) {
 function exportDocx() {
   save();
   const tmp = document.createElement("div");
-  tmp.innerHTML = state.doc_html;
+  tmp.innerHTML = note().html;
   const paras = [];
   const pushText = (text, style) => {
     const clean = xmlEscape(text.replace(/\s+/g, " ").trim());
@@ -435,14 +536,14 @@ function exportDocx() {
       `<w:p><w:pPr><w:pStyle w:val="${style}"/></w:pPr><w:r><w:t xml:space="preserve">${clean}</w:t></w:r></w:p>`,
     );
   };
-  pushText(state.doc_title, "Title");
-  pushText(`Session ${state.session_id} · ${state.session_title} · Working SKU`, "Subtitle");
+  pushText(note().title, "Title");
+  pushText(`Notebook ${state.session_id} · ${state.session_title} · Working SKU`, "Subtitle");
   tmp.querySelectorAll("h2,p,li").forEach((n) => {
     pushText(n.textContent || "", n.tagName === "H2" ? "Heading2" : "Normal");
   });
-  if (state.pins.length) {
+  if (sketch().pins.length) {
     pushText("Pinned features", "Heading2");
-    state.pins.forEach((p) => pushText(`${p.title} — ${p.body}`, "Normal"));
+    sketch().pins.forEach((p) => pushText(`${p.title} — ${p.body}`, "Normal"));
   }
   const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
@@ -463,24 +564,26 @@ function exportDocx() {
     { name: "_rels/.rels", data: rels },
     { name: "word/document.xml", data: documentXml },
   ]);
-  download(slug(state.doc_title) + ".docx", new Blob([zip], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
-  setStatus("Downloaded .docx. Word or Google Docs can open it.");
+  download(slug(note().title) + ".docx", new Blob([zip], { type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" }));
+  setStatus("Downloaded .docx.");
 }
 
 function exportFigma() {
   save();
+  const pg = sketch();
   const spec = {
     schema: "red-noteboard-figma-handoff-v1",
     live_figma_file: false,
     sku: "Working",
     session_id: state.session_id,
     name: state.session_title,
+    page: pg.title,
     frame: {
-      name: "Meeting frame",
+      name: pg.title,
       width: 1200,
       height: 800,
       children: [
-        ...state.shapes.map((s) => ({
+        ...pg.shapes.map((s) => ({
           id: s.id,
           type: s.kind === "ellipse" ? "ELLIPSE" : "RECTANGLE",
           x: Math.round(s.x * 1200),
@@ -489,7 +592,7 @@ function exportFigma() {
           height: Math.round(s.h * 800),
           stroke: s.color,
         })),
-        ...state.pins.map((p) => ({
+        ...pg.pins.map((p) => ({
           id: p.id,
           type: "TEXT",
           x: Math.round(p.x * 1200),
@@ -499,21 +602,24 @@ function exportFigma() {
         })),
       ],
     },
-    notes_title: state.doc_title,
+    notes_title: note().title,
     next_sku: "Connected writes this spec into a real Figma file after Ben names the plan.",
   };
   download(slug(state.session_title) + ".figma-handoff.json", new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }));
-  setStatus("Downloaded Figma-shaped JSON. Live Figma write is Connected / parked.");
-}
-
-function slug(s) {
-  return (s || "noteboard").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "noteboard";
+  setStatus("Downloaded Figma-shaped JSON. Live write is parked.");
 }
 
 function bind() {
   $("sessionTitle").value = state.session_title;
-  $("docTitle").value = state.doc_title;
-  $("editor").innerHTML = state.doc_html;
+  $("docTitle").value = note().title;
+  $("editor").innerHTML = note().html;
+  document.querySelectorAll(".stab[data-section]").forEach((btn) => {
+    btn.addEventListener("click", () => showSection(btn.dataset.section));
+  });
+  $("btnAddSection").addEventListener("click", () => {
+    setStatus("Working keeps Sketch, Stickies, Notes, and Handoff. Extra sections wait for Custom.");
+  });
+  $("btnAddPage").addEventListener("click", addPage);
   document.querySelectorAll("[data-tool]").forEach((btn) => {
     btn.addEventListener("click", () => {
       tool = btn.dataset.tool;
@@ -533,7 +639,7 @@ function bind() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      state.paper_image = String(reader.result);
+      sketch().paper_image = String(reader.result);
       save();
       redraw();
       setStatus("Paper photo imported. Local only.");
@@ -541,29 +647,25 @@ function bind() {
     reader.readAsDataURL(file);
   });
   $("btnClearInk").addEventListener("click", () => {
-    state.strokes = [];
-    state.shapes = [];
+    sketch().strokes = [];
+    sketch().shapes = [];
     save();
     redraw();
   });
   $("btnUndo").addEventListener("click", () => {
-    if (state.strokes.length) state.strokes.pop();
-    else if (state.shapes.length) state.shapes.pop();
+    const pg = sketch();
+    if (pg.strokes.length) pg.strokes.pop();
+    else if (pg.shapes.length) pg.shapes.pop();
     save();
     redraw();
   });
   $("btnExportMd").addEventListener("click", exportMd);
   $("btnExportDocx").addEventListener("click", exportDocx);
   $("btnExportFigma").addEventListener("click", exportFigma);
-  $("btnBoard").addEventListener("click", () => document.body.classList.toggle("mode-board"));
-  $("btnNotes").addEventListener("click", () => {
-    document.body.classList.toggle("mode-notes");
-    document.body.classList.remove("mode-board");
-  });
   $("sessionTitle").addEventListener("change", save);
   $("docTitle").addEventListener("change", save);
   $("editor").addEventListener("input", () => {
-    state.doc_html = $("editor").innerHTML;
+    note().html = $("editor").innerHTML;
     localStorage.setItem(STORAGE, JSON.stringify(state));
   });
   const frame = $("frame");
@@ -578,5 +680,6 @@ function bind() {
 
 bind();
 renderColumns();
+showSection(state.section || "sketch");
 resizeCanvases();
-setStatus("Working SKU ready. Draw, pin a sticky, write notes.");
+setStatus("Notebook ready. Sketch is the paper. Stickies and Notes have their own tabs.");

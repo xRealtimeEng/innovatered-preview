@@ -4,82 +4,115 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="robots" content="noindex,nofollow" />
-  <meta name="theme-color" content="#0F243E" />
+  <meta name="theme-color" content="#3B2A5C" />
   <title>RED Noteboard · Working</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="banner" role="status">
-    Working SKU · fixture session · saved on this device only · not OneNote · not a live Figma file
+    Working SKU · notebook feel · saved on this device · not Microsoft OneNote · not a live Figma file
   </div>
-  <header class="top">
-    <div class="brand">
+
+  <header class="nb-bar">
+    <div class="nb-brand">
       <span class="mark">RED</span>
-      <div>
-        <p class="kicker">Noteboard</p>
-        <input id="sessionTitle" class="title-input" maxlength="80" aria-label="Session title" value="Customer walkthrough" />
+      <div class="nb-meta">
+        <p class="nb-label">Notebook</p>
+        <input id="sessionTitle" class="nb-title" maxlength="80" aria-label="Notebook name" value="Customer walkthrough" />
       </div>
     </div>
-    <div class="top-actions">
-      <button type="button" id="btnBoard" class="ghost">Board</button>
-      <button type="button" id="btnNotes" class="ghost">Notes</button>
-      <button type="button" id="btnExportMd">.md</button>
-      <button type="button" id="btnExportDocx">.docx</button>
-      <button type="button" id="btnExportFigma">Figma JSON</button>
-    </div>
+    <p id="status" class="nb-status">Ready.</p>
   </header>
 
-  <main class="stage">
-    <aside id="boardPane" class="pane board-pane" aria-label="Harbor board">
-      <header class="pane-head">
-        <p class="kicker">Harbor stickies</p>
-        <button type="button" id="btnAddSticky" class="primary small">Add</button>
-      </header>
-      <p class="hint">Drag a card onto the drawing to pin a feature. Move cards between To Do / Doing / Done.</p>
-      <div id="columns" class="columns"></div>
+  <nav class="section-tabs" aria-label="Sections">
+    <button type="button" class="stab is-on" data-section="sketch" style="--tab:#6B4C9A">Sketch</button>
+    <button type="button" class="stab" data-section="board" style="--tab:#2E6B9A">Stickies</button>
+    <button type="button" class="stab" data-section="notes" style="--tab:#2F7A5A">Notes</button>
+    <button type="button" class="stab" data-section="handoff" style="--tab:#A15B2E">Handoff</button>
+    <button type="button" class="stab add" id="btnAddSection" title="Working holds these four sections">+</button>
+  </nav>
+
+  <div class="notebook">
+    <main class="paper-stage">
+      <section id="view-sketch" class="view is-on" aria-label="Sketch section">
+        <div class="ribbon" role="toolbar" aria-label="Draw">
+          <span class="ribbon-label">Draw</span>
+          <button type="button" data-tool="pen" class="rbtn is-on">Pen</button>
+          <button type="button" data-tool="highlighter" class="rbtn">Highlight</button>
+          <button type="button" data-tool="eraser" class="rbtn">Eraser</button>
+          <button type="button" data-tool="rect" class="rbtn">Box</button>
+          <button type="button" data-tool="ellipse" class="rbtn">Oval</button>
+          <button type="button" data-tool="pan" class="rbtn">Move pin</button>
+          <label class="swatch">Color <input id="inkColor" type="color" value="#3B2A5C" /></label>
+          <label class="width">Thick <input id="inkWidth" type="range" min="2" max="22" value="4" /></label>
+          <button type="button" id="btnImport" class="rbtn quiet">Paper photo</button>
+          <input id="fileImport" type="file" accept="image/*" hidden />
+          <button type="button" id="btnUndo" class="rbtn quiet">Undo</button>
+          <button type="button" id="btnClearInk" class="rbtn quiet">Clear ink</button>
+        </div>
+        <div id="frame" class="paper ruled">
+          <canvas id="paper"></canvas>
+          <canvas id="ink"></canvas>
+          <div id="pins" class="pins"></div>
+        </div>
+        <div class="tray" aria-label="Stickies tray">
+          <p>Drag a sticky onto the page to pin a change.</p>
+          <div id="trayCards" class="tray-cards"></div>
+        </div>
+      </section>
+
+      <section id="view-board" class="view" hidden aria-label="Stickies section">
+        <div class="ribbon">
+          <span class="ribbon-label">Board</span>
+          <button type="button" id="btnAddSticky" class="rbtn primary">New sticky</button>
+          <p class="ribbon-hint">Move cards between columns. Pin them from the Sketch tab.</p>
+        </div>
+        <div id="columns" class="harbor"></div>
+      </section>
+
+      <section id="view-notes" class="view" hidden aria-label="Notes section">
+        <div class="ribbon">
+          <span class="ribbon-label">Write</span>
+          <button type="button" data-cmd="bold" class="rbtn"><b>B</b></button>
+          <button type="button" data-cmd="italic" class="rbtn"><i>I</i></button>
+          <button type="button" data-cmd="insertUnorderedList" class="rbtn">List</button>
+          <button type="button" data-block="H2" class="rbtn">Heading</button>
+          <button type="button" data-block="P" class="rbtn">Body</button>
+          <button type="button" id="btnExportMd" class="rbtn quiet">.md</button>
+          <button type="button" id="btnExportDocx" class="rbtn primary">.docx</button>
+        </div>
+        <div class="letter">
+          <input id="docTitle" class="page-heading" maxlength="80" value="Meeting notes" aria-label="Page title" />
+          <div id="editor" class="letter-body" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div>
+        </div>
+      </section>
+
+      <section id="view-handoff" class="view" hidden aria-label="Handoff section">
+        <div class="ribbon">
+          <span class="ribbon-label">Handoff</span>
+          <button type="button" id="btnExportFigma" class="rbtn primary">Download Figma JSON</button>
+        </div>
+        <div class="letter handoff-copy">
+          <h1>Idea to app, this sitting</h1>
+          <p>Working SKU exports a Figma-shaped spec from the sketch and the pinned stickies. A live Figma file waits for Connected, after you name the plan.</p>
+          <ol>
+            <li>Sketch the screen on Sketch.</li>
+            <li>Pin Harbor stickies for each change.</li>
+            <li>Write the meeting on Notes and export Word or Markdown.</li>
+            <li>Download the JSON here for the next builder.</li>
+          </ol>
+          <p class="fine">This notebook is not Microsoft OneNote and does not write to Figma by itself.</p>
+        </div>
+      </section>
+    </main>
+
+    <aside class="page-rail" aria-label="Pages">
+      <p class="rail-label">Pages</p>
+      <div id="pageList" class="page-list"></div>
+      <button type="button" id="btnAddPage" class="add-page">+ Page</button>
     </aside>
+  </div>
 
-    <section class="canvas-wrap" aria-label="Drawing frame">
-      <div class="tools" role="toolbar" aria-label="Ink tools">
-        <button type="button" data-tool="pen" class="tool is-on">Pen</button>
-        <button type="button" data-tool="eraser" class="tool">Erase</button>
-        <button type="button" data-tool="rect" class="tool">Rect</button>
-        <button type="button" data-tool="ellipse" class="tool">Oval</button>
-        <button type="button" data-tool="pan" class="tool">Select</button>
-        <label class="swatch" title="Ink color"><input id="inkColor" type="color" value="#0F243E" /></label>
-        <label class="width">W <input id="inkWidth" type="range" min="2" max="18" value="4" /></label>
-        <button type="button" id="btnImport" class="ghost">Paper photo</button>
-        <input id="fileImport" type="file" accept="image/*" hidden />
-        <button type="button" id="btnClearInk" class="ghost">Clear ink</button>
-        <button type="button" id="btnUndo" class="ghost">Undo</button>
-      </div>
-      <div id="frame" class="frame">
-        <canvas id="paper"></canvas>
-        <canvas id="ink"></canvas>
-        <div id="pins" class="pins"></div>
-      </div>
-    </section>
-
-    <aside id="notesPane" class="pane notes-pane" aria-label="Meeting notes">
-      <header class="pane-head">
-        <p class="kicker">Word-like notes</p>
-        <input id="docTitle" class="doc-title" maxlength="80" value="Meeting notes" aria-label="Document title" />
-      </header>
-      <div class="note-tools" role="toolbar" aria-label="Text tools">
-        <button type="button" data-cmd="bold"><b>B</b></button>
-        <button type="button" data-cmd="italic"><i>I</i></button>
-        <button type="button" data-cmd="insertUnorderedList">List</button>
-        <button type="button" data-block="H2">H2</button>
-        <button type="button" data-block="P">Body</button>
-      </div>
-      <div id="editor" class="editor" contenteditable="true" role="textbox" aria-multiline="true" spellcheck="true"></div>
-    </aside>
-  </main>
-
-  <footer class="foot">
-    <span id="status">Ready.</span>
-    <span>Object: board_session · Host: preview only · Ask before main on company repo</span>
-  </footer>
   <script src="app.js"></script>
 </body>
 </html>
