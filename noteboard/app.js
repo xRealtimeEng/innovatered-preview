@@ -110,7 +110,8 @@ let drawing = false;
 let stroke = null;
 let dragPreset = null;
 let activePiece = null;
-let mode = "draw";
+let mode = "pan";
+let drawArmed = false;
 let addTarget = "image";
 const pointers = new Map();
 const $ = (id) => document.getElementById(id);
@@ -395,31 +396,35 @@ function nearestPage(x, y) {
   }, null);
 }
 
-function dropPreset(evt, preset, extra) {
-  const wpt = screenToWorld(evt);
+function placePreset(preset, extra, x, y) {
   const piece = {
     id: uid("pc"),
     kind: preset.kind,
     title: preset.title,
     body: preset.body || "",
-    x: wpt.x - 30,
-    y: wpt.y - 20,
+    x,
+    y,
     w: preset.w > 1 ? preset.w : PAGE_W * (preset.w || 0.2),
     h: preset.h || 64,
     snap: preset.snap || null,
     color: extra?.color || state.color,
     src: extra?.src,
   };
-  if (piece.snap) pieceMove({ clientX: 0, clientY: 0 });
   if (piece.snap === "nav" || piece.snap === "footer") {
-    const cell = nearestPage(piece.x, piece.y) || state.pages[0];
+    const cell = nearestPage(x, y) || state.pages[0];
     piece.x = cell.gx * PAGE_W + PAGE_W * 0.04;
     piece.y = cell.gy * PAGE_H + (piece.snap === "nav" ? PAGE_H * 0.04 : PAGE_H * 0.88);
     piece.w = PAGE_W * 0.92;
   }
   state.pieces.push(piece);
+  selectedId = piece.id;
   save();
   renderPieces();
+  setStatus(`Placed ${piece.title}.`);
+}
+function dropPreset(evt, preset, extra) {
+  const wpt = screenToWorld(evt);
+  placePreset(preset, extra, wpt.x - 30, wpt.y - 20);
 }
 
 function chip(preset, extra) {
@@ -429,11 +434,21 @@ function chip(preset, extra) {
   el.textContent = (preset.symbol ? preset.symbol + " " : "") + preset.title;
   if (extra?.color) el.style.background = extra.color;
   const pack = { preset, extra };
-  el.addEventListener("dragstart", () => {
+  let fromDrag = false;
+  el.addEventListener("dragstart", (e) => {
+    fromDrag = true;
     dragPreset = pack;
+    e.dataTransfer.setData("text/plain", preset.title);
+    e.dataTransfer.effectAllowed = "copy";
   });
-  el.addEventListener("pointerdown", () => {
-    dragPreset = pack;
+  el.addEventListener("click", () => {
+    if (fromDrag) {
+      fromDrag = false;
+      return;
+    }
+    const fr = frameOf();
+    const n = state.pieces.length % 6;
+    placePreset(preset, extra, fr.x + 24 + n * 18, fr.y + 40 + n * 18);
   });
   return el;
 }
@@ -459,13 +474,18 @@ function renderKits() {
 }
 function panToPage(pg) {
   const vp = $("viewport").getBoundingClientRect();
-  const g = grid();
-  const lx = pg.gx * PAGE_W - g.ox;
-  const ly = pg.gy * PAGE_H - g.oy;
-  view.scale = Math.min(vp.width / PAGE_W, vp.height / PAGE_H) * 0.92;
-  view.x = -lx * view.scale + (vp.width - PAGE_W * view.scale) / 2;
-  view.y = -ly * view.scale + (vp.height - PAGE_H * view.scale) / 2;
+  const fr = frameOf(pg);
+  const local = toLocal(fr.x, fr.y);
+  view.scale = Math.min((vp.width - 28) / fr.w, (vp.height - 28) / fr.h);
+  view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
+  view.y = (vp.height - fr.h * view.scale) / 2 - local.y * view.scale;
   applyView();
+}
+
+function syncCursor() {
+  const vp = $("viewport");
+  if (!vp) return;
+  vp.style.cursor = drawArmed && mode !== "pan" ? "crosshair" : "grab";
 }
 
 function renderMedia() {
@@ -478,10 +498,13 @@ function renderMedia() {
     if (media.id === m.id) b.classList.add("is-on");
     b.addEventListener("click", () => {
       media = m;
-      mode = m.id === "pan" ? "pan" : "draw";
+      drawArmed = m.id !== "pan";
+      mode = drawArmed ? "draw" : "pan";
       $("inkWidth").value = String(m.size);
       $("toolFab").textContent = m.label;
       $("toolName").textContent = m.label;
+      syncCursor();
+      setStatus(drawArmed ? `${m.label} armed. Drag on the frame to draw. Pan tool moves the canvas.` : "Pan. Drag the canvas. Scroll to zoom.");
       renderMedia();
     });
     dock.appendChild(b);
@@ -603,8 +626,11 @@ function showSection(name) {
 
 function startDraw(evt) {
   if (activePiece || evt.target.closest(".piece")) return;
+  if (evt.button === 1 || evt.button === 2) return;
   pointers.set(evt.pointerId, { x: evt.clientX, y: evt.clientY });
-  if (mode === "pan" || pointers.size > 1) return;
+  const pen = evt.pointerType === "pen";
+  const armed = drawArmed && mode !== "pan";
+  if (!(pen || armed) || pointers.size > 1 || evt.shiftKey || evt.altKey) return;
   const w = screenToWorld(evt);
   drawing = true;
   stroke = { media: media.id, color: state.color, size: Number($("inkWidth").value), hard: hardnessMul(), points: [{ x: w.x, y: w.y }] };
@@ -939,5 +965,9 @@ renderColumns();
 prepCanvases();
 fitView();
 renderPieces();
+syncCursor();
 if (window.innerWidth <= 820) $("leftDrawer").classList.remove("is-open");
-setStatus("HMI studio. Pick Phone, Tablet, or Desktop. Drag a widget onto the frame.");
+window.addEventListener("resize", () => {
+  if (state.section === "sketch") fitView();
+});
+setStatus("Desktop works. Drag the canvas to pan, scroll to zoom. Click a widget to place it. Pick a brush to draw.");
