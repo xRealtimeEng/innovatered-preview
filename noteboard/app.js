@@ -1,6 +1,11 @@
-const STORAGE = "red-noteboard-working-v4";
+const STORAGE = "red-noteboard-working-v5";
 const PAGE_W = 1600;
-const PAGE_H = 1100;
+const PAGE_H = 1200;
+const SCREENS = {
+  phone: { w: 390, h: 844, label: "Phone" },
+  tablet: { w: 834, h: 1194, label: "Tablet" },
+  desktop: { w: 1440, h: 900, label: "Desktop" },
+};
 const COLUMNS = [
   { id: "todo", title: "Ready" },
   { id: "doing", title: "On canvas" },
@@ -69,8 +74,10 @@ function loadState() {
   } catch (_) {}
   return {
     session_id: "sess-001",
-    session_title: "Customer walkthrough",
+    session_title: "Untitled HMI",
     section: "sketch",
+    screen: "desktop",
+    layers: { widgets: true, paint: true, grid: true, labels: true },
     pages: [{ id: "pg-0", gx: 0, gy: 0, title: "Page 1" }],
     strokes: [],
     pieces: [],
@@ -94,6 +101,9 @@ function loadState() {
 }
 
 const state = loadState();
+state.screen = state.screen || "desktop";
+state.layers = state.layers || { widgets: true, paint: true, grid: true, labels: true };
+let selectedId = null;
 const view = { x: 0, y: 0, scale: 0.4 };
 let media = MEDIA[3];
 let drawing = false;
@@ -147,17 +157,33 @@ function setStatus(m) {
   $("status").textContent = m;
 }
 
+function frameOf(page) {
+  const spec = SCREENS[state.screen] || SCREENS.desktop;
+  const pg = page || state.pages.find((p) => p.gx === 0 && p.gy === 0) || state.pages[0];
+  return {
+    ...spec,
+    x: pg.gx * PAGE_W + (PAGE_W - spec.w) / 2,
+    y: pg.gy * PAGE_H + (PAGE_H - spec.h) / 2,
+  };
+}
 function applyView() {
   $("world").style.width = worldSize().w + "px";
   $("world").style.height = worldSize().h + "px";
   $("world").style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`;
+  const zoom = $("zoomReadout");
+  if (zoom) zoom.textContent = `Zoom: ${view.scale.toFixed(1)}x`;
+  const name = $("screenName");
+  if (name) name.textContent = (SCREENS[state.screen] || SCREENS.desktop).label;
+  document.querySelectorAll(".preset").forEach((b) => b.classList.toggle("is-on", b.dataset.screen === state.screen));
 }
 function fitView() {
   const vp = $("viewport").getBoundingClientRect();
-  const { w, h } = worldSize();
-  view.scale = Math.min(vp.width / w, vp.height / h);
-  view.x = (vp.width - w * view.scale) / 2;
-  view.y = (vp.height - h * view.scale) / 2;
+  const fr = frameOf();
+  const local = toLocal(fr.x, fr.y);
+  const pad = 28;
+  view.scale = Math.min((vp.width - pad) / fr.w, (vp.height - pad) / fr.h);
+  view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
+  view.y = (vp.height - fr.h * view.scale) / 2 - local.y * view.scale;
   applyView();
 }
 function screenToWorld(evt) {
@@ -173,18 +199,46 @@ function prepCanvases() {
   const { w, h } = worldSize();
   ink.width = paper.width = w;
   ink.height = paper.height = h;
-  pctx.fillStyle = "#1A222C";
+  pctx.fillStyle = "#10161C";
   pctx.fillRect(0, 0, w, h);
   const g = grid();
   state.pages.forEach((pg) => {
-    const x = pg.gx * PAGE_W - g.ox;
-    const y = pg.gy * PAGE_H - g.oy;
-    pctx.fillStyle = "#F4F0E8";
-    pctx.fillRect(x + 10, y + 10, PAGE_W - 20, PAGE_H - 20);
-    pctx.fillStyle = "rgba(20,24,32,.35)";
-    pctx.font = "22px Segoe UI";
-    pctx.fillText(pg.title, x + 28, y + 42);
+    const fr = frameOf(pg);
+    const x = fr.x - g.ox;
+    const y = fr.y - g.oy;
+    pctx.fillStyle = "#FAF8F5";
+    pctx.fillRect(x, y, fr.w, fr.h);
+    pctx.strokeStyle = "#C8102E";
+    pctx.lineWidth = 3;
+    pctx.strokeRect(x, y, fr.w, fr.h);
+    if (state.layers.grid) {
+      pctx.save();
+      pctx.beginPath();
+      pctx.rect(x, y, fr.w, fr.h);
+      pctx.clip();
+      pctx.strokeStyle = "rgba(15,23,32,0.12)";
+      pctx.lineWidth = 1;
+      for (let gx = x; gx < x + fr.w; gx += 24) {
+        pctx.beginPath();
+        pctx.moveTo(gx, y);
+        pctx.lineTo(gx, y + fr.h);
+        pctx.stroke();
+      }
+      for (let gy = y; gy < y + fr.h; gy += 24) {
+        pctx.beginPath();
+        pctx.moveTo(x, gy);
+        pctx.lineTo(x + fr.w, gy);
+        pctx.stroke();
+      }
+      pctx.restore();
+    }
+    if (state.layers.labels) {
+      pctx.fillStyle = "#5C5E6A";
+      pctx.font = "600 18px DM Sans, sans-serif";
+      pctx.fillText(`${pg.title} · ${fr.label}`, x + 16, y + 28);
+    }
   });
+  ink.style.display = state.layers.paint ? "block" : "none";
   redrawInk();
   applyView();
 }
@@ -266,7 +320,7 @@ function renderPieces() {
   state.pieces.forEach((p) => {
     const loc = toLocal(p.x, p.y);
     const el = document.createElement("article");
-    el.className = `piece ${p.kind}`;
+    el.className = `piece ${p.kind}${p.id === selectedId ? " is-selected" : ""}`;
     el.style.left = loc.x + "px";
     el.style.top = loc.y + "px";
     el.style.width = p.w + "px";
@@ -278,6 +332,12 @@ function renderPieces() {
     bindPiece(el, p);
     root.appendChild(el);
   });
+  root.style.display = state.layers.widgets ? "block" : "none";
+  const count = $("pieceCount");
+  if (count) count.textContent = `${state.pieces.length} widget${state.pieces.length === 1 ? "" : "s"}`;
+  const inspect = $("inspectReadout");
+  const sel = state.pieces.find((p) => p.id === selectedId);
+  if (inspect) inspect.textContent = sel ? `${sel.kind}: ${sel.title}` : "Nothing selected.";
 }
 function bindPiece(el, p) {
   const edit = el.querySelector(".edit");
@@ -290,6 +350,8 @@ function bindPiece(el, p) {
     });
   }
   el.addEventListener("pointerdown", (e) => {
+    selectedId = p.id;
+    renderPieces();
     if (e.target.classList.contains("handle")) activePiece = { id: p.id, resize: true, x: e.clientX, y: e.clientY, w: p.w, h: p.h };
     else if (e.target.classList.contains("edit") || e.target.tagName === "VIDEO") {
       activePiece = null;
@@ -404,7 +466,6 @@ function panToPage(pg) {
   view.x = -lx * view.scale + (vp.width - PAGE_W * view.scale) / 2;
   view.y = -ly * view.scale + (vp.height - PAGE_H * view.scale) / 2;
   applyView();
-  closeDrawers();
 }
 
 function renderMedia() {
@@ -549,6 +610,10 @@ function startDraw(evt) {
   stroke = { media: media.id, color: state.color, size: Number($("inkWidth").value), hard: hardnessMul(), points: [{ x: w.x, y: w.y }] };
 }
 function moveDraw(evt) {
+  const wpt = screenToWorld(evt);
+  const fr = frameOf(nearestPage(wpt.x, wpt.y) || state.pages[0]);
+  const coords = $("statusCoords");
+  if (coords) coords.textContent = `X: ${Math.round(wpt.x - fr.x)}, Y: ${Math.round(wpt.y - fr.y)}`;
   if (activePiece) {
     pieceMove(evt);
     return;
@@ -609,12 +674,10 @@ function toggleDrawer(side) {
   other.classList.remove("is-open");
   $("dim").hidden = !open;
 }
-function closeDrawers() {
-  $("leftDrawer").classList.remove("is-open");
-  $("rightDrawer").classList.remove("is-open");
-  $("dim").hidden = true;
-  $("addMenu").hidden = true;
+function closeMenus() {
   $("pageMenu").hidden = true;
+  if ($("addMenu")) $("addMenu").hidden = true;
+  $("dim").hidden = true;
 }
 
 function htmlToMarkdown(html) {
@@ -698,17 +761,84 @@ function bind() {
   $("hardness").value = String(state.hardness || 72);
   $("toolFab").textContent = media.label;
   document.querySelectorAll("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
-  $("btnPages").addEventListener("click", () => {
+  $("btnPages").addEventListener("click", (e) => {
+    e.stopPropagation();
     $("pageMenu").hidden = !$("pageMenu").hidden;
-    $("addMenu").hidden = true;
   });
-  $("btnAdd").addEventListener("click", () => {
-    $("addMenu").hidden = !$("addMenu").hidden;
+  $("btnLeft").addEventListener("click", () => {
+    const open = !$("leftDrawer").classList.contains("is-open");
+    $("leftDrawer").classList.toggle("is-open", open);
+    if (window.innerWidth <= 820) $("dim").hidden = !open;
+  });
+  $("btnRight").addEventListener("click", () => {
+    const open = !$("rightDrawer").classList.contains("is-open");
+    $("rightDrawer").classList.toggle("is-open", open);
+    if (window.innerWidth <= 820) $("dim").hidden = !open;
+  });
+  $("dim").addEventListener("click", () => {
+    if (window.innerWidth <= 820) {
+      $("leftDrawer").classList.remove("is-open");
+      $("rightDrawer").classList.remove("is-open");
+    }
+    closeMenus();
+  });
+  document.querySelectorAll(".ltab").forEach((b) => {
+    b.addEventListener("click", () => {
+      document.querySelectorAll(".ltab").forEach((x) => x.classList.toggle("is-on", x === b));
+      document.querySelectorAll(".ltab-panel").forEach((p) => {
+        const on = p.dataset.lpanel === b.dataset.ltab;
+        p.classList.toggle("is-on", on);
+        p.hidden = !on;
+      });
+    });
+  });
+  document.querySelectorAll("[data-screen]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.screen = b.dataset.screen;
+      save();
+      prepCanvases();
+      fitView();
+      setStatus(`${SCREENS[state.screen].label} frame.`);
+    });
+  });
+  document.querySelectorAll("[data-layer]").forEach((box) => {
+    box.checked = state.layers[box.dataset.layer] !== false;
+    box.addEventListener("change", () => {
+      state.layers[box.dataset.layer] = box.checked;
+      save();
+      prepCanvases();
+      renderPieces();
+    });
+  });
+  const addScreen = () => {
+    const title = prompt("Screen name", `Screen ${state.pages.length + 1}`);
+    if (!title) return;
+    addPage("right");
+    state.pages[state.pages.length - 1].title = title;
+    save();
+    prepCanvases();
+    renderKits();
+  };
+  $("actNew").addEventListener("click", addScreen);
+  $("actNewSide").addEventListener("click", addScreen);
+  $("actRename").addEventListener("click", () => {
     $("pageMenu").hidden = true;
+    $("sessionTitle").focus();
+    $("sessionTitle").select();
   });
-  $("btnLeft").addEventListener("click", () => toggleDrawer("left"));
-  $("btnRight").addEventListener("click", () => toggleDrawer("right"));
-  $("dim").addEventListener("click", closeDrawers);
+  $("btnDeletePiece").addEventListener("click", () => {
+    if (!selectedId) return;
+    state.pieces = state.pieces.filter((p) => p.id !== selectedId);
+    selectedId = null;
+    save();
+    renderPieces();
+  });
+  $("widgetSearch").addEventListener("input", () => {
+    const q = $("widgetSearch").value.trim().toLowerCase();
+    document.querySelectorAll(".chip").forEach((c) => {
+      c.style.display = !q || c.textContent.toLowerCase().includes(q) ? "" : "none";
+    });
+  });
   $("toolFab").addEventListener("click", () => {
     $("toolSheet").hidden = !$("toolSheet").hidden;
   });
@@ -809,4 +939,5 @@ renderColumns();
 prepCanvases();
 fitView();
 renderPieces();
-setStatus("Canvas is the page. Pieces and Shapes start closed.");
+if (window.innerWidth <= 820) $("leftDrawer").classList.remove("is-open");
+setStatus("HMI studio. Pick Phone, Tablet, or Desktop. Drag a widget onto the frame.");
