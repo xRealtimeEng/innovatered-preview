@@ -12,6 +12,25 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+  <div id="welcome" class="welcome">
+    <form id="welcomeForm" class="welcome-card">
+      <p class="menu-kicker">RED HMI Studio</p>
+      <h1>Start a workspace</h1>
+      <p>Pick a screen, a theme, and a name. Then drag a navbar, a button, or a text box onto the page. Paint stays in the left drawer. Nothing here calls a live site.</p>
+      <label>Project name
+        <input id="welcomeTitle" maxlength="80" value="Untitled HMI" required />
+      </label>
+      <label>Screen
+        <select id="welcomeDevice"></select>
+      </label>
+      <fieldset>
+        <legend>Theme</legend>
+        <div class="theme-choices" id="welcomeThemes"></div>
+      </fieldset>
+      <label class="check"><input id="welcomeGrid" type="checkbox" checked /> Small grid on the page</label>
+      <button type="submit">Open workspace</button>
+    </form>
+  </div>
   <div id="studio" class="app">
     <header class="rps-topbar">
       <button type="button" id="btnLeft" class="icon-btn" aria-label="Toggle screens">☰</button>
@@ -51,62 +70,34 @@
     </header>
 
     <div class="workspace">
-      <aside id="leftDrawer" class="drawer left mesh-glass is-open">
-        <div class="rps-left-tabs">
-          <button type="button" class="ltab is-on" data-ltab="screens">Screens</button>
-          <button type="button" class="ltab" data-ltab="widgets">Widgets</button>
-          <button type="button" class="ltab" data-ltab="paint">Paint</button>
-          <button type="button" class="ltab" data-ltab="org">Organize</button>
+      <aside id="leftDrawer" class="drawer left mesh-glass">
+        <div class="drawer-head">
+          <strong>Workspace</strong>
+          <button type="button" id="btnDrawerClose" class="icon-btn" aria-label="Close drawer">‹</button>
         </div>
         <div class="drawer-scroll">
-          <section class="ltab-panel is-on" data-lpanel="screens">
-            <p class="section-label">Presets</p>
-            <div class="preset-row">
-              <button type="button" class="preset" data-screen="phone">Phone<br><small>390×844</small></button>
-              <button type="button" class="preset" data-screen="tablet">Tablet<br><small>834×1194</small></button>
-              <button type="button" class="preset" data-screen="desktop">Desktop<br><small>1440×900</small></button>
-            </div>
-            <p class="section-label">Layers</p>
+          <details open>
+            <summary>Page</summary>
+            <p class="hint">The device is drawn on the page. Grid starts small.</p>
+            <div id="deviceKit" class="device-kit"></div>
+            <label class="slider">Grid size <input id="gridSize" type="range" min="8" max="32" value="12" /></label>
             <div class="layers">
+              <label><input type="checkbox" data-layer="grid" checked /> Grid</label>
               <label><input type="checkbox" data-layer="widgets" checked /> Widgets</label>
               <label><input type="checkbox" data-layer="paint" checked /> Paint</label>
-              <label><input type="checkbox" data-layer="grid" checked /> Grid</label>
+              <label><input type="checkbox" data-layer="labels" checked /> Labels</label>
               <label><input type="checkbox" data-layer="background" checked /> Background</label>
             </div>
-            <p class="section-label">Notebook layouts</p>
-            <div class="layout-grid" id="layoutKit"></div>
             <button type="button" id="actNewSide" class="draw-outline">+ New screen</button>
-          </section>
-          <section class="ltab-panel" data-lpanel="widgets" hidden>
-            <p class="hint">Click or drag a theme preset onto the screen. Paint stays on the Paint tab.</p>
+          </details>
+          <details open>
+            <summary>Theme</summary>
+            <div id="builtThemes" class="theme-choices"></div>
             <div class="theme-bar">
-              <input id="themeName" maxlength="60" aria-label="Theme name" value="RED RTLS demo" />
+              <input id="themeName" maxlength="60" aria-label="Theme name" value="Light" />
               <label class="token">Accent <input id="themeAccent" type="color" value="#C8102E" /></label>
             </div>
-            <div class="theme-actions">
-              <button type="button" id="btnExportTheme">Export theme</button>
-              <label class="import-btn">Import theme
-                <input id="themeImport" type="file" accept="application/json,.json" hidden />
-              </label>
-              <button type="button" id="btnAddPreset">Add preset</button>
-              <button type="button" id="btnResetTheme">RED RTLS theme</button>
-            </div>
-            <div class="kit" id="leftKit"></div>
-            <p class="section-label">Real-world import</p>
-            <label class="import-btn">Floorplan or site photo
-              <input id="bgImport" type="file" accept="image/*" hidden />
-            </label>
-            <label class="import-btn">RTLS fixture JSON
-              <input id="fixtureImport" type="file" accept="application/json,.json" hidden />
-            </label>
-            <button type="button" id="btnSampleFixture" class="draw-outline">Place sample anchors, tags, zones</button>
-            <p class="fine">Fixture is local demo rows. It is not a live tag feed and it does not call the site API.</p>
-            <label class="import-btn">Import image or video
-              <input id="fileImport" type="file" accept="image/*,video/*" hidden />
-            </label>
-            <div class="kit" id="photoKit"></div>
-          </section>
-          <section class="ltab-panel" data-lpanel="paint" hidden>
+            <p class="hint">Pick a built-in theme, or set a token from the mixer.</p>
             <canvas id="wheel" width="140" height="140" aria-label="Color wheel"></canvas>
             <div class="mix-table">
               <button type="button" id="mixA" class="mix-well">A</button>
@@ -116,15 +107,66 @@
               <button type="button" id="mixOut" class="mix-well">Mix</button>
             </div>
             <input id="inkColor" type="color" value="#C8102E" />
+            <div class="theme-actions">
+              <button type="button" data-token="accent">Paint → accent</button>
+              <button type="button" data-token="paper">Paint → paper</button>
+              <button type="button" data-token="ink">Paint → ink</button>
+              <button type="button" data-token="card">Paint → card</button>
+            </div>
             <label class="slider">Size <input id="inkWidth" type="range" min="1" max="80" value="10" /></label>
             <label class="slider">Hardness <input id="hardness" type="range" min="8" max="100" value="72" /></label>
             <div id="mediaDock" class="media-dock"></div>
             <button type="button" id="toolFab" class="tool-current">Round</button>
             <div id="toolSheet" hidden></div>
             <span id="toolName" hidden>Round</span>
-          </section>
-          <section class="ltab-panel" data-lpanel="org" hidden>
-            <p class="section-label">Screens</p>
+            <div class="theme-actions">
+              <button type="button" id="btnExportTheme">Export theme</button>
+              <label class="import-btn">Import theme
+                <input id="themeImport" type="file" accept="application/json,.json" hidden />
+              </label>
+              <button type="button" id="btnResetTheme">Reset theme</button>
+              <button type="button" id="btnAddPreset">Add preset</button>
+            </div>
+          </details>
+          <details open>
+            <summary>UI</summary>
+            <p class="hint">Drag a bar onto the screen, or click to drop it.</p>
+            <div id="kit-ui" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Buttons</summary>
+            <div id="kit-buttons" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Text</summary>
+            <div id="kit-text" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Cards</summary>
+            <div id="kit-cards" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Forms</summary>
+            <div id="kit-forms" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Lists and alerts</summary>
+            <div id="kit-lists" class="gallery"></div>
+          </details>
+          <details>
+            <summary>Imports</summary>
+            <label class="import-btn">Floorplan or site photo
+              <input id="bgImport" type="file" accept="image/*" hidden />
+            </label>
+            <label class="import-btn">RTLS fixture JSON
+              <input id="fixtureImport" type="file" accept="application/json,.json" hidden />
+            </label>
+            <button type="button" id="btnSampleFixture" class="draw-outline">Place sample anchors</button>
+            <label class="import-btn">Image or video
+              <input id="fileImport" type="file" accept="image/*,video/*" hidden />
+            </label>
+            <div class="kit" id="photoKit"></div>
+            <div class="kit" id="leftKit" hidden></div>
             <div class="kit" id="pageKit"></div>
             <div class="add-pages">
               <button type="button" data-add="left">Left</button>
@@ -135,9 +177,8 @@
               <button type="button" data-add="video">Video</button>
             </div>
             <div id="addMenu" hidden></div>
-            <p class="section-label">Shapes</p>
             <div class="kit" id="rightKit"></div>
-          </section>
+          </details>
         </div>
       </aside>
 

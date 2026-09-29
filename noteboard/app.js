@@ -1,6 +1,65 @@
 const STORAGE = "red-noteboard-working-v5";
-const PAGE_W = 1600;
-const PAGE_H = 1200;
+const PAGE_W = 2400;
+const PAGE_H = 1800;
+const DEVICES = [
+  { id: "iphone-16", family: "phone", label: "iPhone 16", w: 393, h: 852, radius: 44 },
+  { id: "iphone-16-pro", family: "phone", label: "iPhone 16 Pro", w: 402, h: 874, radius: 46 },
+  { id: "iphone-16-pro-max", family: "phone", label: "iPhone 16 Pro Max", w: 440, h: 956, radius: 50 },
+  { id: "pixel-9", family: "phone", label: "Pixel 9", w: 412, h: 892, radius: 36 },
+  { id: "pixel-9-pro", family: "phone", label: "Pixel 9 Pro", w: 427, h: 952, radius: 38 },
+  { id: "galaxy-s24", family: "phone", label: "Galaxy S24", w: 360, h: 780, radius: 32 },
+  { id: "galaxy-s24u", family: "phone", label: "Galaxy S24 Ultra", w: 384, h: 824, radius: 22 },
+  { id: "ipad-11", family: "tablet", label: "iPad 11", w: 834, h: 1194, radius: 20 },
+  { id: "ipad-pro-13", family: "tablet", label: "iPad Pro 13", w: 1032, h: 1376, radius: 22 },
+  { id: "galaxy-tab", family: "tablet", label: "Galaxy Tab", w: 800, h: 1280, radius: 16 },
+  { id: "laptop-13", family: "desktop", label: "Laptop 13", w: 1280, h: 800, radius: 10 },
+  { id: "desktop-1440", family: "desktop", label: "Desktop 1440", w: 1440, h: 900, radius: 8 },
+  { id: "desktop-1920", family: "desktop", label: "Desktop 1920", w: 1920, h: 1080, radius: 8 },
+];
+const BUILT_THEMES = {
+  light: { name: "Light", tokens: { accent: "#C8102E", ink: "#0B1C2D", paper: "#FAF8F5", card: "#FFFFFF", alert: "#F2A900", ok: "#1F7A4D", text: "#1A1B22" } },
+  dark: { name: "Dark", tokens: { accent: "#FF4D6A", ink: "#F2F3F6", paper: "#14181E", card: "#1E242C", alert: "#F2A900", ok: "#3DDC97", text: "#F2F3F6" } },
+  alt1: { name: "Alt 1", tokens: { accent: "#1B6CA8", ink: "#0E1C2F", paper: "#F4F7FB", card: "#FFFFFF", alert: "#E07A3D", ok: "#2A9D8F", text: "#102033" } },
+  alt2: { name: "Alt 2", tokens: { accent: "#6B4C9A", ink: "#1A1028", paper: "#F7F4FB", card: "#FFFFFF", alert: "#D4A017", ok: "#2F6B4F", text: "#1A1028" } },
+};
+const GALLERIES = {
+  ui: [
+    { kind: "nav", title: "Top navbar", body: "Logo    Map    Assets", w: 320, h: 56, role: "nav", snap: "nav" },
+    { kind: "nav", title: "Bottom nav", body: "Home    List    Map", w: 280, h: 56, role: "nav" },
+    { kind: "list", title: "Side drawer", body: "Profile\nInbox\nSettings", w: 200, h: 220, role: "list" },
+    { kind: "footer", title: "Footer", body: "Demo · not live", w: 320, h: 48, role: "footer", snap: "footer" },
+    { kind: "shape", title: "App bar", body: "≡     Title     ○", w: 300, h: 48, role: "nav" },
+  ],
+  buttons: [
+    { kind: "shape", title: "Primary", body: "Continue", w: 160, h: 44, role: "button" },
+    { kind: "shape", title: "Secondary", body: "Cancel", w: 140, h: 44, role: "button-ghost" },
+    { kind: "shape", title: "Ghost", body: "Learn more", w: 140, h: 40, role: "button-ghost" },
+    { kind: "shape", title: "FAB", body: "+", w: 56, h: 56, role: "button" },
+    { kind: "shape", title: "Icon", body: "⌕", w: 44, h: 44, role: "button-ghost" },
+  ],
+  text: [
+    { kind: "textbox", title: "Heading", body: "Page title", w: 240, h: 48, role: "label" },
+    { kind: "textbox", title: "Body", body: "A short note about this screen.", w: 260, h: 72, role: "label" },
+    { kind: "textbox", title: "Label", body: "Field label", w: 140, h: 28, role: "label" },
+    { kind: "textbox", title: "Caption", body: "Updated today", w: 140, h: 24, role: "label" },
+  ],
+  cards: [
+    { kind: "card", title: "Metric", body: "Tags in view\n128", w: 180, h: 88, role: "card" },
+    { kind: "card", title: "Device", body: "Anchor A1\nOnline", w: 220, h: 84, role: "card" },
+    { kind: "card", title: "Activity", body: "Map\nAddress\nDate · time", w: 240, h: 120, role: "card" },
+  ],
+  forms: [
+    { kind: "form", title: "Sign in", body: "Email\nPassword\n[ Continue ]", w: 240, h: 140, role: "form" },
+    { kind: "form", title: "Filter", body: "Zone\nAsset type\n[ Apply ]", w: 220, h: 120, role: "form" },
+    { kind: "form", title: "Account", body: "Name\nEmail\nPhone", w: 260, h: 120, role: "form" },
+  ],
+  lists: [
+    { kind: "list", title: "Menu", body: "Profile\nInbox\nSettings", w: 200, h: 110, role: "list" },
+    { kind: "list", title: "Service rows", body: "Name          Rating\nRow            Row", w: 260, h: 80, role: "list" },
+    { kind: "symbol", title: "Alert", body: "Tag left the zone", w: 260, h: 44, role: "alert" },
+    { kind: "symbol", title: "Status", body: "Online", w: 96, h: 32, role: "pill" },
+  ],
+};
 const SCREENS = {
   phone: { w: 390, h: 844, label: "Phone" },
   tablet: { w: 834, h: 1194, label: "Tablet" },
@@ -178,6 +237,114 @@ function renderLayouts() {
     root.appendChild(b);
   });
 }
+function previewChip(preset) {
+  const el = chip(preset, { color: tokenColor(preset) });
+  el.classList.add("preview");
+  const sample = document.createElement("div");
+  sample.className = `sample ${preset.role || preset.kind}`;
+  sample.textContent = preset.body || preset.title;
+  const cap = document.createElement("small");
+  cap.textContent = preset.title;
+  el.textContent = "";
+  el.append(sample, cap);
+  return el;
+}
+function renderGalleries() {
+  Object.entries(GALLERIES).forEach(([key, items]) => {
+    const root = $("kit-" + key);
+    if (!root) return;
+    root.innerHTML = "";
+    items.forEach((item) => root.appendChild(previewChip(item)));
+  });
+}
+function renderDevices() {
+  const root = $("deviceKit");
+  if (!root) return;
+  root.innerHTML = "";
+  ["phone", "tablet", "desktop"].forEach((family) => {
+    const h = document.createElement("p");
+    h.className = "section-label";
+    h.textContent = family === "phone" ? "Phones" : family === "tablet" ? "Tablets" : "Desktops";
+    root.appendChild(h);
+    const row = document.createElement("div");
+    row.className = "device-row";
+    DEVICES.filter((d) => d.family === family).forEach((d) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.dataset.device = d.id;
+      b.className = d.id === state.deviceId ? "is-on" : "";
+      b.textContent = d.label;
+      b.addEventListener("click", () => selectDevice(d.id));
+      row.appendChild(b);
+    });
+    root.appendChild(row);
+  });
+}
+function selectDevice(id) {
+  state.deviceId = id;
+  const family = deviceSpec().family;
+  state.screen = family === "phone" || family === "tablet" ? family : "desktop";
+  save();
+  prepCanvases();
+  fitView();
+  renderDevices();
+  setStatus(deviceSpec().label + " drawn on the page.");
+}
+function renderThemes() {
+  const paint = (root, pick) => {
+    if (!root) return;
+    root.innerHTML = "";
+    Object.entries(BUILT_THEMES).forEach(([id, theme]) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = id === state.themeId ? "is-on" : "";
+      b.innerHTML = `<i style="background:${theme.tokens.paper}"></i><i style="background:${theme.tokens.accent}"></i><i style="background:${theme.tokens.ink}"></i><span>${theme.name}</span>`;
+      b.addEventListener("click", () => pick(id));
+      root.appendChild(b);
+    });
+  };
+  paint($("builtThemes"), applyBuiltTheme);
+  paint($("welcomeThemes"), (id) => {
+    state.themeId = id;
+    renderThemes();
+  });
+}
+function applyBuiltTheme(id) {
+  const built = BUILT_THEMES[id];
+  if (!built) return;
+  state.themeId = id;
+  state.theme.name = built.name;
+  state.theme.tokens = Object.assign({}, built.tokens);
+  state.color = built.tokens.accent;
+  if ($("inkColor")) $("inkColor").value = state.color;
+  if ($("themeName")) $("themeName").value = built.name;
+  if ($("themeAccent")) $("themeAccent").value = built.tokens.accent;
+  document.documentElement.style.setProperty("--paper", built.tokens.paper);
+  document.documentElement.style.setProperty("--accent", built.tokens.accent);
+  save();
+  prepCanvases();
+  renderGalleries();
+  renderThemes();
+  setStatus(built.name + " theme. Tokens are on this device only.");
+}
+function fillWelcomeDevices() {
+  const sel = $("welcomeDevice");
+  if (!sel) return;
+  sel.innerHTML = "";
+  DEVICES.forEach((d) => {
+    const o = document.createElement("option");
+    o.value = d.id;
+    o.textContent = d.label;
+    sel.appendChild(o);
+  });
+  const narrow = window.innerWidth <= 820;
+  sel.value = narrow ? "iphone-16" : "desktop-1440";
+}
+function openWelcome(show) {
+  const card = $("welcome");
+  if (!card) return;
+  card.hidden = !show;
+}
 function sampleFixture() {
   return {
     schema: "red-hmi-rtls-fixture-v1",
@@ -233,6 +400,9 @@ function loadState() {
 const state = loadState();
 state.screen = state.screen || "desktop";
 state.layers = Object.assign({ widgets: true, paint: true, grid: true, labels: true, background: true }, state.layers || {});
+state.deviceId = state.deviceId || "desktop-1440";
+state.gridSize = state.gridSize || 12;
+state.themeId = state.themeId || "light";
 state.theme = state.theme && state.theme.widgets ? state.theme : defaultTheme();
 defaultTheme().widgets.forEach((w) => {
   if (!state.theme.widgets.some((have) => have.title === w.title)) state.theme.widgets.push(w);
@@ -300,8 +470,11 @@ function setStatus(m) {
   $("status").textContent = m;
 }
 
+function deviceSpec() {
+  return DEVICES.find((d) => d.id === state.deviceId) || DEVICES.find((d) => d.id === "desktop-1440");
+}
 function frameOf(page) {
-  const spec = SCREENS[state.screen] || SCREENS.desktop;
+  const spec = deviceSpec();
   const pg = page || state.pages.find((p) => p.gx === 0 && p.gy === 0) || state.pages[0];
   return {
     ...spec,
@@ -316,26 +489,27 @@ function applyView() {
   const zoom = $("zoomReadout");
   if (zoom) zoom.textContent = `Zoom: ${view.scale.toFixed(1)}x`;
   const name = $("screenName");
-  if (name) name.textContent = (SCREENS[state.screen] || SCREENS.desktop).label;
-  document.querySelectorAll(".preset").forEach((b) => b.classList.toggle("is-on", b.dataset.screen === state.screen));
+  if (name) name.textContent = deviceSpec().label;
+  document.querySelectorAll("[data-device]").forEach((b) => b.classList.toggle("is-on", b.dataset.device === state.deviceId));
 }
 function fitView() {
   alignFrame(frameOf());
 }
 function alignFrame(fr) {
   const vp = $("viewport").getBoundingClientRect();
+  if (vp.width < 40 || vp.height < 40) return;
   const local = toLocal(fr.x, fr.y);
-  const wide = vp.width >= 900;
-  const padX = wide ? 8 : 12;
-  const padY = wide ? 8 : 12;
-  const fit = Math.min((vp.width - padX * 2) / fr.w, (vp.height - padY * 2) / fr.h);
-  view.scale = fit;
-  if (wide) {
-    view.x = vp.width - padX - fr.w * view.scale - local.x * view.scale;
-    view.y = padY - local.y * view.scale;
+  const margin = fr.family === "desktop" ? 0 : 36;
+  if (fr.family === "desktop") {
+    view.scale = Math.max(vp.width / fr.w, vp.height / fr.h);
+    view.x = -local.x * view.scale;
+    view.y = -local.y * view.scale;
   } else {
-    view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
-    view.y = padY - local.y * view.scale;
+    const outerW = fr.w + margin * 2;
+    const outerH = fr.h + margin * 2;
+    view.scale = Math.min(vp.width / outerW, vp.height / outerH);
+    view.x = (vp.width - outerW * view.scale) / 2 - (local.x - margin) * view.scale;
+    view.y = (vp.height - outerH * view.scale) / 2 - (local.y - margin) * view.scale;
   }
   applyView();
 }
@@ -348,45 +522,76 @@ function screenToWorld(evt) {
   };
 }
 
+function roundPath(ctx, x, y, w, h, r) {
+  const rr = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
 function prepCanvases() {
   const { w, h } = worldSize();
   ink.width = paper.width = w;
   ink.height = paper.height = h;
-  pctx.fillStyle = "#10161C";
+  const tokens = (state.theme && state.theme.tokens) || {};
+  const paperColor = tokens.paper || "#FAF8F5";
+  pctx.fillStyle = paperColor;
   pctx.fillRect(0, 0, w, h);
   const g = grid();
+  const step = Number(state.gridSize) || 12;
   state.pages.forEach((pg) => {
     const fr = frameOf(pg);
     const x = fr.x - g.ox;
     const y = fr.y - g.oy;
-    pctx.fillStyle = (state.theme.tokens && state.theme.tokens.paper) || "#FAF8F5";
-    pctx.fillRect(x, y, fr.w, fr.h);
+    const bezel = fr.family === "desktop" ? 0 : 18;
+    pctx.fillStyle = "#1A1B22";
+    roundPath(pctx, x - bezel, y - bezel, fr.w + bezel * 2, fr.h + bezel * 2, (fr.radius || 16) + 6);
+    pctx.fill();
+    if (fr.family === "desktop") {
+      pctx.fillStyle = "#0A0C0E";
+      pctx.fillRect(x, y, fr.w, 28);
+    }
+    pctx.fillStyle = paperColor;
+    roundPath(pctx, x, y + (fr.family === "desktop" ? 28 : 0), fr.w, fr.h - (fr.family === "desktop" ? 28 : 0), fr.family === "desktop" ? 0 : fr.radius || 16);
+    pctx.fill();
     const bg = state.backgrounds[pg.id];
     if (bg && state.layers.background !== false && bgCache[bg] && bgCache[bg].complete && bgCache[bg].naturalWidth) {
+      pctx.save();
+      roundPath(pctx, x, y, fr.w, fr.h, fr.radius || 0);
+      pctx.clip();
       pctx.drawImage(bgCache[bg], x, y, fr.w, fr.h);
+      pctx.restore();
     } else if (bg && state.layers.background !== false && !bgCache[bg]) {
       const img = new Image();
       bgCache[bg] = img;
       img.onload = () => prepCanvases();
       img.src = bg;
     }
-    pctx.strokeStyle = (state.theme.tokens && state.theme.tokens.accent) || "#C8102E";
-    pctx.lineWidth = 3;
-    pctx.strokeRect(x, y, fr.w, fr.h);
+    if (fr.family === "phone") {
+      pctx.fillStyle = "#111";
+      roundPath(pctx, x + fr.w / 2 - 42, y + 10, 84, 18, 9);
+      pctx.fill();
+      roundPath(pctx, x + fr.w / 2 - 48, y + fr.h - 16, 96, 5, 3);
+      pctx.fill();
+    }
     if (state.layers.grid) {
+      const dark = (hexToRgb(paperColor)[0] + hexToRgb(paperColor)[1] + hexToRgb(paperColor)[2]) < 380;
       pctx.save();
       pctx.beginPath();
       pctx.rect(x, y, fr.w, fr.h);
       pctx.clip();
-      pctx.strokeStyle = "rgba(15,23,32,0.12)";
+      pctx.strokeStyle = dark ? "rgba(255,255,255,0.14)" : "rgba(15,23,32,0.16)";
       pctx.lineWidth = 1;
-      for (let gx = x; gx < x + fr.w; gx += 24) {
+      for (let gx = x; gx < x + fr.w; gx += step) {
         pctx.beginPath();
         pctx.moveTo(gx, y);
         pctx.lineTo(gx, y + fr.h);
         pctx.stroke();
       }
-      for (let gy = y; gy < y + fr.h; gy += 24) {
+      for (let gy = y; gy < y + fr.h; gy += step) {
         pctx.beginPath();
         pctx.moveTo(x, gy);
         pctx.lineTo(x + fr.w, gy);
@@ -395,9 +600,9 @@ function prepCanvases() {
       pctx.restore();
     }
     if (state.layers.labels) {
-      pctx.fillStyle = "#5C5E6A";
-      pctx.font = "600 18px DM Sans, sans-serif";
-      pctx.fillText(`${pg.title} · ${fr.label}`, x + 16, y + 28);
+      pctx.fillStyle = tokens.text || "#5C5E6A";
+      pctx.font = "600 22px DM Sans, sans-serif";
+      pctx.fillText(`${pg.title} · ${fr.label}`, x + 16, y + (fr.family === "desktop" ? 22 : 36));
     }
   });
   ink.style.display = state.layers.paint ? "block" : "none";
@@ -1027,6 +1232,53 @@ function bind() {
   $("toolFab").textContent = media.label;
   if ($("themeName")) $("themeName").value = state.theme.name;
   if ($("themeAccent")) $("themeAccent").value = state.theme.tokens.accent || "#C8102E";
+  if ($("gridSize")) $("gridSize").value = String(state.gridSize || 12);
+  fillWelcomeDevices();
+  renderThemes();
+  renderGalleries();
+  renderDevices();
+  openWelcome(!state.welcomed);
+  const welcomeForm = $("welcomeForm");
+  if (welcomeForm) {
+    welcomeForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      state.session_title = $("welcomeTitle").value.trim() || "Untitled HMI";
+      $("sessionTitle").value = state.session_title;
+      state.deviceId = $("welcomeDevice").value;
+      state.screen = deviceSpec().family === "desktop" ? "desktop" : deviceSpec().family;
+      state.layers.grid = $("welcomeGrid").checked;
+      state.gridSize = 12;
+      state.welcomed = true;
+      applyBuiltTheme(state.themeId || "light");
+      openWelcome(false);
+      if (window.innerWidth > 820) $("leftDrawer").classList.add("is-open");
+      prepCanvases();
+      fitView();
+      setStatus("Workspace open. Drag a template from the left drawer.");
+    });
+  }
+  const closer = $("btnDrawerClose");
+  if (closer) closer.addEventListener("click", () => {
+    $("leftDrawer").classList.remove("is-open");
+    if ($("dim")) $("dim").hidden = true;
+  });
+  if ($("gridSize")) $("gridSize").addEventListener("input", () => {
+    state.gridSize = Number($("gridSize").value);
+    save();
+    prepCanvases();
+  });
+  document.querySelectorAll("[data-token]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.theme.tokens[b.dataset.token] = $("inkColor").value;
+      if (b.dataset.token === "accent" && $("themeAccent")) $("themeAccent").value = $("inkColor").value;
+      document.documentElement.style.setProperty("--accent", state.theme.tokens.accent);
+      document.documentElement.style.setProperty("--paper", state.theme.tokens.paper);
+      save();
+      prepCanvases();
+      renderGalleries();
+      setStatus("Theme token updated from the paint color.");
+    });
+  });
   document.querySelectorAll("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
   $("btnPages").addEventListener("click", (e) => {
     e.stopPropagation();
@@ -1243,20 +1495,28 @@ function bind() {
   });
 }
 
-bind();
-drawWheel();
-paintMixWells();
-renderMedia();
-renderKits();
-renderLayouts();
-renderTypes();
-renderColumns();
-prepCanvases();
-fitView();
-renderPieces();
-syncCursor();
-if (window.innerWidth <= 820) $("leftDrawer").classList.remove("is-open");
+try {
+  bind();
+  drawWheel();
+  paintMixWells();
+  renderMedia();
+  renderKits();
+  renderLayouts();
+  renderTypes();
+  renderColumns();
+  prepCanvases();
+  fitView();
+  renderPieces();
+  syncCursor();
+  if (window.innerWidth > 820 && state.welcomed) $("leftDrawer").classList.add("is-open");
+  requestAnimationFrame(() => fitView());
+} catch (err) {
+  const status = document.getElementById("status");
+  if (status) status.textContent = "Studio hit an error: " + err.message;
+  const card = document.getElementById("welcome");
+  if (card) card.hidden = false;
+}
 window.addEventListener("resize", () => {
   if (state.section === "sketch") fitView();
 });
-setStatus("Desktop works. Drag the canvas to pan, scroll to zoom. Click a widget to place it. Pick a brush to draw.");
+if (state.welcomed) setStatus("Drag the canvas to pan. Scroll to zoom. Open Workspace to change the page.");
