@@ -1,0 +1,15 @@
+{
+  "schema": "red-hmi-rtls-fixture-v1",
+  "live_api": false,
+  "site": "Sample dock",
+  "devices": [
+    { "id": "anc-01", "type": "uwb-anchor", "name": "Anchor A1", "status": "online" },
+    { "id": "anc-02", "type": "uwb-anchor", "name": "Anchor A2", "status": "offline" },
+    { "id": "gw-01", "type": "gateway", "name": "Gateway North", "status": "online" },
+    { "id": "tag-14", "type": "tag", "name": "Pallet 14", "status": "moving" }
+  ],
+  "zones": [
+    { "id": "z-dock", "name": "Dock" },
+    { "id": "z-cold", "name": "Cold room" }
+  ]
+}

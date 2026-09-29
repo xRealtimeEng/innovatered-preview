@@ -71,13 +71,34 @@
               <label><input type="checkbox" data-layer="widgets" checked /> Widgets</label>
               <label><input type="checkbox" data-layer="paint" checked /> Paint</label>
               <label><input type="checkbox" data-layer="grid" checked /> Grid</label>
-              <label><input type="checkbox" data-layer="labels" checked /> Labels</label>
+              <label><input type="checkbox" data-layer="background" checked /> Background</label>
             </div>
             <button type="button" id="actNewSide" class="draw-outline">+ New screen</button>
           </section>
           <section class="ltab-panel" data-lpanel="widgets" hidden>
-            <p class="hint">Drag a widget onto the screen.</p>
+            <p class="hint">Click or drag a theme preset onto the screen. Paint stays on the Paint tab.</p>
+            <div class="theme-bar">
+              <input id="themeName" maxlength="60" aria-label="Theme name" value="RED RTLS demo" />
+              <label class="token">Accent <input id="themeAccent" type="color" value="#C8102E" /></label>
+            </div>
+            <div class="theme-actions">
+              <button type="button" id="btnExportTheme">Export theme</button>
+              <label class="import-btn">Import theme
+                <input id="themeImport" type="file" accept="application/json,.json" hidden />
+              </label>
+              <button type="button" id="btnAddPreset">Add preset</button>
+              <button type="button" id="btnResetTheme">RED RTLS theme</button>
+            </div>
             <div class="kit" id="leftKit"></div>
+            <p class="section-label">Real-world import</p>
+            <label class="import-btn">Floorplan or site photo
+              <input id="bgImport" type="file" accept="image/*" hidden />
+            </label>
+            <label class="import-btn">RTLS fixture JSON
+              <input id="fixtureImport" type="file" accept="application/json,.json" hidden />
+            </label>
+            <button type="button" id="btnSampleFixture" class="draw-outline">Place sample anchors, tags, zones</button>
+            <p class="fine">Fixture is local demo rows. It is not a live tag feed and it does not call the site API.</p>
             <label class="import-btn">Import image or video
               <input id="fileImport" type="file" accept="image/*,video/*" hidden />
             </label>
@@ -148,7 +169,7 @@
         <section id="view-handoff" class="view sheet" hidden>
           <button type="button" class="tab" data-section="sketch">← Canvas</button>
           <h1>Handoff</h1>
-          <p>This studio wears the RPS shell so an HMI can be sketched on a phone, tablet, or desktop frame. It does not write a live Figma file and it is not the RPS site planner.</p>
+          <p>This studio is a paint-simple HMI canvas. Themes and RTLS fixtures are files you can hand to a demo. Live login and contact stay on the RED API (`POST /auth/login`, `GET /auth/me`, `POST /contact`). This page does not call them and does not store a token.</p>
         </section>
       </main>
 

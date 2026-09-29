@@ -67,6 +67,46 @@ function mixHex(a, b) {
   return rgbToHex((A[0] + B[0]) / 2, (A[1] + B[1]) / 2, (A[2] + B[2]) / 2);
 }
 
+function defaultTheme() {
+  return {
+    schema: "red-hmi-theme-v1",
+    name: "RED RTLS demo",
+    tokens: { accent: "#C8102E", ink: "#0B1C2D", paper: "#FAF8F5", card: "#FFFFFF", alert: "#F2A900", ok: "#30A46C" },
+    widgets: [
+      { kind: "shape", title: "Primary button", body: "Locate asset", w: 168, h: 44, role: "button" },
+      { kind: "shape", title: "Secondary button", body: "Clear filters", w: 168, h: 44, role: "button-ghost" },
+      { kind: "card", title: "Device card", body: "UWB anchor\nOnline · Floor 1", w: 230, h: 96, role: "card" },
+      { kind: "card", title: "Metric card", body: "Tags in view\n128", w: 180, h: 88, role: "card" },
+      { kind: "form", title: "Filter form", body: "Zone\nAsset type\n[ Apply ]", w: 240, h: 130, role: "form" },
+      { kind: "form", title: "Sign-in form", body: "Email\nPassword\n[ Sign in ]", w: 240, h: 150, role: "form" },
+      { kind: "nav", title: "Navbar", body: "RED    Map    Assets    Alerts", snap: "nav", w: 0.92, h: 56, role: "nav" },
+      { kind: "footer", title: "Footer", body: "Demo · not live tracking", snap: "footer", w: 0.92, h: 48, role: "footer" },
+      { kind: "symbol", title: "Alert banner", body: "Zone B · tag left the geofence", w: 300, h: 48, role: "alert" },
+      { kind: "symbol", title: "Status pill", body: "Online", w: 100, h: 32, role: "pill" },
+      { kind: "list", title: "Zone list", body: "• Dock\n• Aisle 4\n• Cold room", w: 180, h: 110, role: "list" },
+      { kind: "list", title: "Coverage legend", body: "• UWB\n• BLE\n• Wi-Fi", w: 150, h: 96, role: "legend" },
+      { kind: "textbox", title: "Floor label", body: "Floor 1 · 3.0 m", w: 200, h: 44, role: "label" },
+      { kind: "sticky", title: "Change note", body: "Ask: show last seen", w: 170, h: 84, role: "note" },
+    ],
+  };
+}
+function sampleFixture() {
+  return {
+    schema: "red-hmi-rtls-fixture-v1",
+    live_api: false,
+    site: "Sample dock",
+    devices: [
+      { id: "anc-01", type: "uwb-anchor", name: "Anchor A1", status: "online" },
+      { id: "anc-02", type: "uwb-anchor", name: "Anchor A2", status: "offline" },
+      { id: "gw-01", type: "gateway", name: "Gateway North", status: "online" },
+      { id: "tag-14", type: "tag", name: "Pallet 14", status: "moving" },
+    ],
+    zones: [
+      { id: "z-dock", name: "Dock" },
+      { id: "z-cold", name: "Cold room" },
+    ],
+  };
+}
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE);
@@ -77,7 +117,9 @@ function loadState() {
     session_title: "Untitled HMI",
     section: "sketch",
     screen: "desktop",
-    layers: { widgets: true, paint: true, grid: true, labels: true },
+    layers: { widgets: true, paint: true, grid: true, labels: true, background: true },
+    theme: defaultTheme(),
+    backgrounds: {},
     pages: [{ id: "pg-0", gx: 0, gy: 0, title: "Page 1" }],
     strokes: [],
     pieces: [],
@@ -102,8 +144,11 @@ function loadState() {
 
 const state = loadState();
 state.screen = state.screen || "desktop";
-state.layers = state.layers || { widgets: true, paint: true, grid: true, labels: true };
+state.layers = Object.assign({ widgets: true, paint: true, grid: true, labels: true, background: true }, state.layers || {});
+state.theme = state.theme && state.theme.widgets ? state.theme : defaultTheme();
+state.backgrounds = state.backgrounds || {};
 let selectedId = null;
+const bgCache = {};
 const view = { x: 0, y: 0, scale: 0.4 };
 let media = MEDIA[3];
 let drawing = false;
@@ -151,8 +196,14 @@ function save() {
   if ($("editor")) state.doc_html = $("editor").innerHTML;
   state.color = $("inkColor").value;
   state.hardness = Number($("hardness").value);
-  localStorage.setItem(STORAGE, JSON.stringify(state));
-  $("status").textContent = "Saved on this device.";
+  if ($("themeName") && state.theme) state.theme.name = $("themeName").value.trim() || state.theme.name;
+  if ($("themeAccent") && state.theme) state.theme.tokens.accent = $("themeAccent").value;
+  try {
+    localStorage.setItem(STORAGE, JSON.stringify(state));
+    $("status").textContent = "Saved on this device.";
+  } catch (_) {
+    $("status").textContent = "Not saved. The background image is too large for this browser.";
+  }
 }
 function setStatus(m) {
   $("status").textContent = m;
@@ -207,9 +258,18 @@ function prepCanvases() {
     const fr = frameOf(pg);
     const x = fr.x - g.ox;
     const y = fr.y - g.oy;
-    pctx.fillStyle = "#FAF8F5";
+    pctx.fillStyle = (state.theme.tokens && state.theme.tokens.paper) || "#FAF8F5";
     pctx.fillRect(x, y, fr.w, fr.h);
-    pctx.strokeStyle = "#C8102E";
+    const bg = state.backgrounds[pg.id];
+    if (bg && state.layers.background !== false && bgCache[bg] && bgCache[bg].complete && bgCache[bg].naturalWidth) {
+      pctx.drawImage(bgCache[bg], x, y, fr.w, fr.h);
+    } else if (bg && state.layers.background !== false && !bgCache[bg]) {
+      const img = new Image();
+      bgCache[bg] = img;
+      img.onload = () => prepCanvases();
+      img.src = bg;
+    }
+    pctx.strokeStyle = (state.theme.tokens && state.theme.tokens.accent) || "#C8102E";
     pctx.lineWidth = 3;
     pctx.strokeRect(x, y, fr.w, fr.h);
     if (state.layers.grid) {
@@ -321,7 +381,7 @@ function renderPieces() {
   state.pieces.forEach((p) => {
     const loc = toLocal(p.x, p.y);
     const el = document.createElement("article");
-    el.className = `piece ${p.kind}${p.id === selectedId ? " is-selected" : ""}`;
+    el.className = `piece ${p.kind} ${p.role || ""}${p.id === selectedId ? " is-selected" : ""}`;
     el.style.left = loc.x + "px";
     el.style.top = loc.y + "px";
     el.style.width = p.w + "px";
@@ -407,6 +467,7 @@ function placePreset(preset, extra, x, y) {
     w: preset.w > 1 ? preset.w : PAGE_W * (preset.w || 0.2),
     h: preset.h || 64,
     snap: preset.snap || null,
+    role: preset.role || null,
     color: extra?.color || state.color,
     src: extra?.src,
   };
@@ -452,10 +513,20 @@ function chip(preset, extra) {
   });
   return el;
 }
+function tokenColor(preset) {
+  const t = (state.theme && state.theme.tokens) || {};
+  if (preset.role === "button") return t.accent || "#C8102E";
+  if (preset.role === "button-ghost") return "#2A3439";
+  if (preset.role === "alert") return t.alert || "#F2A900";
+  if (preset.role === "pill") return t.ok || "#30A46C";
+  if (preset.role === "card" || preset.role === "form") return t.card || "#FFFFFF";
+  if (preset.kind === "nav" || preset.kind === "footer") return t.ink || "#0B1C2D";
+  return null;
+}
 function renderKits() {
   $("leftKit").innerHTML = "";
-  LEFT_PRESETS.forEach((p) => $("leftKit").appendChild(chip(p)));
-  state.types.forEach((t) => $("leftKit").appendChild(chip({ kind: t.kind, title: t.name, body: t.name, w: 180, h: 80, symbol: t.symbol }, { color: t.color })));
+  (state.theme.widgets || []).forEach((p) => $("leftKit").appendChild(chip(p, { color: tokenColor(p) })));
+  state.types.forEach((t) => $("leftKit").appendChild(chip({ kind: t.kind, title: t.name, body: t.name, w: 180, h: 80, symbol: t.symbol, role: "note" }, { color: t.color })));
   $("rightKit").innerHTML = "";
   RIGHT_SHAPES.forEach((p) => $("rightKit").appendChild(chip(p, { color: state.color })));
   $("pageKit").innerHTML = "";
@@ -776,7 +847,80 @@ function exportDocx() {
 }
 function exportFigma() {
   save();
-  download(slug(state.session_title) + ".figma-handoff.json", new Blob([JSON.stringify({ schema: "red-noteboard-figma-handoff-v1", live_figma_file: false, pages: state.pages, pieces: state.pieces }, null, 2)], { type: "application/json" }));
+  download(slug(state.session_title) + ".figma-handoff.json", new Blob([JSON.stringify({ schema: "red-noteboard-figma-handoff-v1", live_figma_file: false, live_api: false, theme: state.theme.name, pages: state.pages, pieces: state.pieces.map(({ src, ...rest }) => rest) }, null, 2)], { type: "application/json" }));
+}
+function readJsonFile(file, onOk) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      onOk(JSON.parse(String(reader.result)));
+    } catch (_) {
+      setStatus("That file is not JSON.");
+    }
+  };
+  reader.readAsText(file);
+}
+function exportTheme() {
+  save();
+  const payload = { schema: "red-hmi-theme-v1", name: state.theme.name, tokens: state.theme.tokens, widgets: state.theme.widgets };
+  download(slug(state.theme.name) + ".theme.json", new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" }));
+  setStatus("Theme file downloaded. It has no live API key.");
+}
+function applyTheme(data) {
+  if (!data || !Array.isArray(data.widgets)) {
+    setStatus("Theme needs a widgets list.");
+    return;
+  }
+  state.theme = {
+    schema: "red-hmi-theme-v1",
+    name: data.name || "Imported theme",
+    tokens: Object.assign(defaultTheme().tokens, data.tokens || {}),
+    widgets: data.widgets.map((w) => ({
+      kind: w.kind || "shape",
+      title: w.title || "Preset",
+      body: w.body || "",
+      w: w.w || 160,
+      h: w.h || 48,
+      snap: w.snap || null,
+      role: w.role || null,
+      symbol: w.symbol || "",
+    })),
+  };
+  if ($("themeName")) $("themeName").value = state.theme.name;
+  if ($("themeAccent")) $("themeAccent").value = state.theme.tokens.accent;
+  save();
+  renderKits();
+  prepCanvases();
+  setStatus(`Theme “${state.theme.name}” loaded. Click a preset to place it.`);
+}
+function placeFixture(data) {
+  if (!data || (!Array.isArray(data.devices) && !Array.isArray(data.zones))) {
+    setStatus("Fixture needs devices or zones.");
+    return;
+  }
+  const fr = frameOf();
+  let y = fr.y + 48;
+  (data.devices || []).forEach((d, i) => {
+    placePreset(
+      { kind: "card", title: d.name || d.id, body: `${d.type || "device"}\n${d.status || "unknown"} · ${d.id || ""}`, w: 230, h: 84, role: "card" },
+      { color: tokenColor({ role: "card" }) },
+      fr.x + 24 + (i % 2) * 250,
+      y + Math.floor(i / 2) * 96,
+    );
+  });
+  y += Math.ceil((data.devices || []).length / 2) * 96 + 12;
+  (data.zones || []).forEach((z, i) => {
+    placePreset(
+      { kind: "symbol", title: z.name || z.id, body: "Zone", w: 140, h: 40, role: "pill" },
+      { color: tokenColor({ role: "pill" }) },
+      fr.x + 24 + i * 150,
+      y,
+    );
+  });
+  setStatus(`${data.site || "Fixture"} placed. Local rows only. Not a live tag feed.`);
+}
+function currentPage() {
+  return state.pages.find((p) => p.gx === 0 && p.gy === 0) || state.pages[0];
 }
 
 function bind() {
@@ -786,6 +930,8 @@ function bind() {
   $("inkColor").value = state.color;
   $("hardness").value = String(state.hardness || 72);
   $("toolFab").textContent = media.label;
+  if ($("themeName")) $("themeName").value = state.theme.name;
+  if ($("themeAccent")) $("themeAccent").value = state.theme.tokens.accent || "#C8102E";
   document.querySelectorAll("[data-section]").forEach((b) => b.addEventListener("click", () => showSection(b.dataset.section)));
   $("btnPages").addEventListener("click", (e) => {
     e.stopPropagation();
@@ -947,6 +1093,53 @@ function bind() {
   $("btnExportMd").addEventListener("click", exportMd);
   $("btnExportDocx").addEventListener("click", exportDocx);
   $("btnExportFigma").addEventListener("click", exportFigma);
+  $("btnExportTheme").addEventListener("click", exportTheme);
+  $("btnResetTheme").addEventListener("click", () => applyTheme(defaultTheme()));
+  $("themeAccent").addEventListener("input", () => {
+    state.theme.tokens.accent = $("themeAccent").value;
+    save();
+    renderKits();
+  });
+  $("themeName").addEventListener("change", save);
+  $("btnAddPreset").addEventListener("click", () => {
+    const title = prompt("Preset name", "Call button");
+    if (!title) return;
+    const kind = prompt("Kind: shape, card, form, list, textbox, sticky, nav, footer", "shape") || "shape";
+    state.theme.widgets.push({ kind, title, body: prompt("Label", title) || title, w: 180, h: 56, role: kind === "shape" ? "button" : kind });
+    save();
+    renderKits();
+  });
+  $("themeImport").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) readJsonFile(file, applyTheme);
+    e.target.value = "";
+  });
+  $("fixtureImport").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) readJsonFile(file, placeFixture);
+    e.target.value = "";
+  });
+  $("btnSampleFixture").addEventListener("click", () => placeFixture(sampleFixture()));
+  $("bgImport").addEventListener("change", (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const page = currentPage();
+      state.backgrounds[page.id] = String(reader.result);
+      state.layers.background = true;
+      try {
+        save();
+        prepCanvases();
+        setStatus("Background set on this screen. Floorplan or site photo. Local only.");
+      } catch (_) {
+        delete state.backgrounds[page.id];
+        setStatus("That image is too large for this browser. Use a smaller photo.");
+      }
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  });
   document.querySelectorAll("[data-cmd]").forEach((b) => b.addEventListener("click", () => document.execCommand(b.dataset.cmd, false)));
   $("sessionTitle").addEventListener("change", save);
   document.addEventListener("fullscreenchange", () => {
