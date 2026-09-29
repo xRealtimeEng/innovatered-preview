@@ -58,7 +58,7 @@ button, input { font-family: inherit; color: inherit; }
 .workspace { flex: 1; display: flex; min-height: 0; position: relative; }
 .mesh-glass { background: var(--mesh); backdrop-filter: blur(16px); }
 .drawer.left {
-  width: 300px; border-right: 1px solid var(--sidebar-border); display: none; flex-direction: column; z-index: 5;
+  width: 248px; border-right: 1px solid var(--sidebar-border); display: none; flex-direction: column; z-index: 5;
 }
 .drawer.left.is-open { display: flex; }
 .drawer.right {
@@ -73,7 +73,11 @@ button, input { font-family: inherit; color: inherit; }
 .ltab.is-on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px; background: var(--accent); }
 .drawer-scroll { flex: 1; overflow: auto; padding: 12px; }
 .section-label { margin: 10px 0 6px; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--sidebar-text); }
-.preset-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.layout-grid button {
+  border: 1px solid var(--sidebar-border); background: var(--sidebar-light); color: var(--sidebar-text-active);
+  border-radius: 8px; min-height: 40px; font-size: 11px; cursor: pointer; text-align: left; padding: 6px 8px;
+}
 .preset, .draw-outline, .add-pages button, #btnDeletePiece {
   border: 1px solid var(--sidebar-border); background: var(--sidebar-light); color: var(--sidebar-text-active);
   border-radius: 8px; min-height: 44px; cursor: pointer;

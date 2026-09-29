@@ -87,8 +87,96 @@ function defaultTheme() {
       { kind: "list", title: "Coverage legend", body: "• UWB\n• BLE\n• Wi-Fi", w: 150, h: 96, role: "legend" },
       { kind: "textbox", title: "Floor label", body: "Floor 1 · 3.0 m", w: 200, h: 44, role: "label" },
       { kind: "sticky", title: "Change note", body: "Ask: show last seen", w: 170, h: 84, role: "note" },
+      { kind: "shape", title: "FAB", body: "›", w: 56, h: 56, role: "button" },
+      { kind: "nav", title: "Bottom nav", body: "Home   List   Map", w: 280, h: 56, role: "nav" },
+      { kind: "card", title: "Avatar row", body: "○\nUsername", w: 200, h: 88, role: "card" },
+      { kind: "list", title: "Menu rows", body: "Profile\nInbox\nAccount settings\nAdd device\nAdd payment method", w: 220, h: 160, role: "list" },
+      { kind: "form", title: "Account card", body: "Full name\nEmail\nDOB    Phone\nStreet address", w: 260, h: 140, role: "form" },
+      { kind: "card", title: "Updates card", body: "Updates & activity", w: 280, h: 72, role: "card" },
+      { kind: "textbox", title: "Search", body: "Search", w: 200, h: 40, role: "label" },
+      { kind: "card", title: "Video tile", body: "Video", w: 160, h: 100, role: "card" },
+      { kind: "list", title: "Service rows", body: "Name          Rating\nRow            Row\nRow            Row", w: 280, h: 120, role: "list" },
+      { kind: "card", title: "Activity card", body: "Map\nAddress\nDate · time", w: 240, h: 140, role: "card" },
     ],
   };
+}
+const NOTEBOOK = [
+  { id: "bottom-nav", label: "Bottom nav + FAB", pieces: [
+    { kind: "textbox", role: "label", title: "Screen", body: "", x: 0.06, y: 0.06, w: 0.88, h: 36 },
+    { kind: "nav", role: "nav", title: "Tabs", body: "□   □   □", x: 0.04, y: 0.9, w: 0.72, h: 56 },
+    { kind: "shape", role: "button", title: "FAB", body: "›", x: 0.78, y: 0.9, w: 56, h: 56 },
+  ]},
+  { id: "profile", label: "Profile drawer", pieces: [
+    { kind: "card", role: "card", title: "Username", body: "○", x: 0.18, y: 0.04, w: 0.64, h: 88 },
+    { kind: "list", role: "list", title: "Menu", body: "Profile\nInbox\nAccount settings\nAdd device\nAdd payment method", x: 0.08, y: 0.2, w: 0.84, h: 200 },
+    { kind: "sticky", role: "note", title: "Money", body: "Add credits\nView transactions", x: 0.08, y: 0.52, w: 0.84, h: 72 },
+  ]},
+  { id: "services", label: "Services drawer", pieces: [
+    { kind: "textbox", role: "label", title: "Services", body: "", x: 0.04, y: 0.2, w: 0.22, h: 80 },
+    { kind: "shape", role: "button", title: "+", body: "+", x: 0.62, y: 0.04, w: 40, h: 40 },
+    { kind: "card", role: "card", title: "Me", body: "○", x: 0.36, y: 0.08, w: 0.28, h: 72 },
+    { kind: "list", role: "list", title: "Rows", body: "Item\nItem\nItem\nItem\nItem", x: 0.3, y: 0.22, w: 0.64, h: 280 },
+  ]},
+  { id: "shell", label: "App shell", pieces: [
+    { kind: "shape", role: "button-ghost", title: "Menu", body: "≡", x: 0.04, y: 0.03, w: 44, h: 44 },
+    { kind: "shape", role: "button-ghost", title: "User", body: "○", x: 0.78, y: 0.03, w: 44, h: 44 },
+    { kind: "card", role: "card", title: "Updates", body: "Updates & activity", x: 0.06, y: 0.42, w: 0.88, h: 72 },
+    { kind: "textbox", role: "label", title: "Search", body: "Search", x: 0.2, y: 0.9, w: 0.4, h: 40 },
+    { kind: "shape", role: "button", title: "QR", body: "QR", x: 0.78, y: 0.9, w: 52, h: 40 },
+  ]},
+  { id: "account", label: "Account card", pieces: [
+    { kind: "card", role: "card", title: "Username", body: "○", x: 0.28, y: 0.04, w: 0.44, h: 88 },
+    { kind: "form", role: "form", title: "Account", body: "Full name     Email\nDOB     Phone\nStreet address", x: 0.06, y: 0.22, w: 0.88, h: 130 },
+    { kind: "textbox", role: "label", title: "Account settings", body: "", x: 0.06, y: 0.42, w: 0.7, h: 32 },
+  ]},
+  { id: "signin", label: "Sign in", pieces: [
+    { kind: "textbox", role: "label", title: "Join today", body: "", x: 0.18, y: 0.28, w: 0.64, h: 40 },
+    { kind: "shape", role: "button", title: "Continue", body: "Continue", x: 0.12, y: 0.38, w: 0.76, h: 48 },
+    { kind: "shape", role: "button-ghost", title: "Sign in another way", body: "Sign in", x: 0.12, y: 0.48, w: 0.76, h: 44 },
+  ]},
+  { id: "service-list", label: "Service list", pieces: [
+    { kind: "textbox", role: "label", title: "Name", body: "Rating", x: 0.06, y: 0.04, w: 0.88, h: 36 },
+    { kind: "list", role: "list", title: "Left", body: "Row\nRow\nRow\nRow", x: 0.04, y: 0.12, w: 0.44, h: 200 },
+    { kind: "list", role: "list", title: "Right", body: "Row\nRow\nRow", x: 0.52, y: 0.12, w: 0.44, h: 150 },
+  ]},
+  { id: "activity", label: "Activity card", pieces: [
+    { kind: "textbox", role: "label", title: "View title", body: "", x: 0.06, y: 0.04, w: 0.6, h: 32 },
+    { kind: "card", role: "card", title: "Stop", body: "Map\nAddress\nDate · time", x: 0.08, y: 0.14, w: 0.84, h: 160 },
+    { kind: "card", role: "card", title: "Chart", body: "Activity", x: 0.08, y: 0.4, w: 0.84, h: 80 },
+  ]},
+];
+function applyNotebook(id) {
+  const layout = NOTEBOOK.find((n) => n.id === id);
+  if (!layout) return;
+  state.screen = "phone";
+  const fr = frameOf();
+  state.pieces = state.pieces.filter((p) => {
+    const cx = p.x + (p.w || 0) / 2;
+    const cy = p.y + (p.h || 0) / 2;
+    return cx < fr.x || cx > fr.x + fr.w || cy < fr.y || cy > fr.y + fr.h;
+  });
+  layout.pieces.forEach((p) => {
+    const w = p.w <= 1 ? Math.round(fr.w * p.w) : p.w;
+    const h = p.h <= 1 ? Math.round(fr.h * p.h) : p.h;
+    const x = fr.x + (p.x <= 1 ? fr.w * p.x : p.x);
+    const y = fr.y + (p.y <= 1 ? fr.h * p.y : p.y);
+    placePreset({ kind: p.kind, role: p.role, title: p.title, body: p.body, w, h, snap: null }, { color: tokenColor(p) }, x, y);
+  });
+  fitView();
+  renderPieces();
+  setStatus(layout.label + ". Phone frame, top right. Drag still pans.");
+}
+function renderLayouts() {
+  const root = $("layoutKit");
+  if (!root) return;
+  root.innerHTML = "";
+  NOTEBOOK.forEach((n) => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = n.label;
+    b.addEventListener("click", () => applyNotebook(n.id));
+    root.appendChild(b);
+  });
 }
 function sampleFixture() {
   return {
@@ -146,6 +234,9 @@ const state = loadState();
 state.screen = state.screen || "desktop";
 state.layers = Object.assign({ widgets: true, paint: true, grid: true, labels: true, background: true }, state.layers || {});
 state.theme = state.theme && state.theme.widgets ? state.theme : defaultTheme();
+defaultTheme().widgets.forEach((w) => {
+  if (!state.theme.widgets.some((have) => have.title === w.title)) state.theme.widgets.push(w);
+});
 state.backgrounds = state.backgrounds || {};
 let selectedId = null;
 const bgCache = {};
@@ -229,13 +320,23 @@ function applyView() {
   document.querySelectorAll(".preset").forEach((b) => b.classList.toggle("is-on", b.dataset.screen === state.screen));
 }
 function fitView() {
+  alignFrame(frameOf());
+}
+function alignFrame(fr) {
   const vp = $("viewport").getBoundingClientRect();
-  const fr = frameOf();
   const local = toLocal(fr.x, fr.y);
-  const pad = 28;
-  view.scale = Math.min((vp.width - pad) / fr.w, (vp.height - pad) / fr.h);
-  view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
-  view.y = (vp.height - fr.h * view.scale) / 2 - local.y * view.scale;
+  const wide = vp.width >= 900;
+  const padX = wide ? 8 : 12;
+  const padY = wide ? 8 : 12;
+  const fit = Math.min((vp.width - padX * 2) / fr.w, (vp.height - padY * 2) / fr.h);
+  view.scale = fit;
+  if (wide) {
+    view.x = vp.width - padX - fr.w * view.scale - local.x * view.scale;
+    view.y = padY - local.y * view.scale;
+  } else {
+    view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
+    view.y = padY - local.y * view.scale;
+  }
   applyView();
 }
 function screenToWorld(evt) {
@@ -544,13 +645,7 @@ function renderKits() {
   });
 }
 function panToPage(pg) {
-  const vp = $("viewport").getBoundingClientRect();
-  const fr = frameOf(pg);
-  const local = toLocal(fr.x, fr.y);
-  view.scale = Math.min((vp.width - 28) / fr.w, (vp.height - 28) / fr.h);
-  view.x = (vp.width - fr.w * view.scale) / 2 - local.x * view.scale;
-  view.y = (vp.height - fr.h * view.scale) / 2 - local.y * view.scale;
-  applyView();
+  alignFrame(frameOf(pg));
 }
 
 function syncCursor() {
@@ -1153,6 +1248,7 @@ drawWheel();
 paintMixWells();
 renderMedia();
 renderKits();
+renderLayouts();
 renderTypes();
 renderColumns();
 prepCanvases();
