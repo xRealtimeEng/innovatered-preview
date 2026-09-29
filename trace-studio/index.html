@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RED Trace Studio · Working</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="mark">RED</div>
+    <div>
+      <h1>Trace Studio</h1>
+      <p class="sub">Working SKU · PNG / JPEG → SVG · object <code>trace_job</code></p>
+    </div>
+  </header>
+
+  <main class="desk">
+    <section class="col">
+      <h2>Source</h2>
+      <label class="drop" id="drop">
+        <input id="file" type="file" accept="image/png,image/jpeg,image/jpg" hidden />
+        <span id="dropLabel">Drop a PNG or JPEG, or click to pick.</span>
+      </label>
+      <div class="frame"><img id="srcImg" alt="Source will show here" /></div>
+      <p class="meta" id="srcMeta">No file.</p>
+    </section>
+
+    <section class="col">
+      <h2>Mode</h2>
+      <div class="modes" id="modes"></div>
+      <p class="warn" id="warn" hidden></p>
+      <div class="row">
+        <label>Max edge <input id="maxEdge" type="number" min="128" max="1024" value="512" /></label>
+        <button type="button" id="run" disabled>Trace</button>
+        <button type="button" id="dl" disabled>Download SVG</button>
+      </div>
+      <p class="meta" id="jobMeta">Pick a file and a mode.</p>
+    </section>
+
+    <section class="col">
+      <h2>Result</h2>
+      <div class="frame" id="outFrame"><p class="placeholder">Nothing generated.</p></div>
+    </section>
+  </main>
+
+  <aside class="lessons">
+    <h2>Lessons from the badge sitting</h2>
+    <ul>
+      <li><strong>Exact wrap</strong> keeps pixels. It is not a vector. Do not call it a trace.</li>
+      <li><strong>Color regions</strong> drop quality. A 3D render will posterize. Say that before download.</li>
+      <li><strong>Edge lines</strong> on a photo look terrible if sold as “the original.” Use them as linework, not a substitute.</li>
+      <li>Do not replace a mark the founder already kept.</li>
+      <li>A dark hole plus a white glint reads as an eye. Not on a gem gear.</li>
+      <li>Show the file. Delete the leftover PNG when he said the artefact is out.</li>
+      <li>This desk exists because one-off chat tracing burned the sitting.</li>
+    </ul>
+  </aside>
+
+  <footer>Working only. Private GitHub + temp links. This seat does not touch company Pages.</footer>
+  <script src="app.js"></script>
+</body>
+</html>
