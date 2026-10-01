@@ -362,17 +362,20 @@ function sampleFixture() {
     ],
   };
 }
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE);
-    if (raw) return JSON.parse(raw);
-  } catch (_) {}
+function freshProject() {
   return {
-    session_id: "sess-001",
+    session_id: "sess-" + Date.now().toString(36),
     session_title: "Untitled HMI",
+    welcomed: false,
     section: "sketch",
     screen: "desktop",
-    layers: { widgets: true, paint: true, grid: true, labels: true, background: true },
+    deviceId: "desktop-1440",
+    themeId: "light",
+    os: "none",
+    homeButton: false,
+    gridSize: 12,
+    paperGridSize: 24,
+    layers: { widgets: true, paint: true, grid: true, labels: true, background: true, screenGrid: true, paperGrid: true },
     theme: defaultTheme(),
     backgrounds: {},
     pages: [{ id: "pg-0", gx: 0, gy: 0, title: "Page 1" }],
@@ -395,6 +398,13 @@ function loadState() {
     doc_title: "Meeting notes",
     doc_html: "<p>Paint the screen. Pin the change.</p>",
   };
+}
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE);
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return freshProject();
 }
 
 const state = loadState();
@@ -1334,6 +1344,47 @@ function placeFixture(data) {
   });
   setStatus(`${data.site || "Fixture"} placed. Local rows only. Not a live tag feed.`);
 }
+function startNewProject() {
+  const name = (state.session_title || "This project").trim();
+  const ok = window.confirm("Start a new project?\n\n" + name + " is cleared on this device. Screens, paint, widgets, notes, and the background go. Export first if you need to keep it.");
+  if (!ok) return;
+  const next = freshProject();
+  Object.keys(state).forEach((key) => { delete state[key]; });
+  Object.assign(state, next);
+  selectedId = null;
+  Object.keys(bgCache).forEach((key) => { delete bgCache[key]; });
+  $("pageMenu").hidden = true;
+  $("btnPages").classList.remove("is-on");
+  $("sessionTitle").value = state.session_title;
+  if ($("welcomeTitle")) $("welcomeTitle").value = state.session_title;
+  if ($("welcomeGrid")) $("welcomeGrid").checked = true;
+  $("docTitle").value = state.doc_title;
+  $("editor").innerHTML = state.doc_html;
+  $("inkColor").value = state.color;
+  $("hardness").value = String(state.hardness);
+  if ($("gridSize")) $("gridSize").value = "12";
+  if ($("paperGridSize")) $("paperGridSize").value = "24";
+  if ($("homeButton")) $("homeButton").checked = false;
+  document.querySelectorAll("[data-layer]").forEach((box) => {
+    box.checked = state.layers[box.dataset.layer] !== false;
+  });
+  const light = BUILT_THEMES.light;
+  if (light) {
+    document.documentElement.style.setProperty("--paper", light.tokens.paper);
+    document.documentElement.style.setProperty("--accent", light.tokens.accent);
+  }
+  fillWelcomeDevices();
+  renderThemes();
+  renderDevices();
+  markOs();
+  showSection("sketch");
+  prepCanvases();
+  redrawInk();
+  renderPieces();
+  fitView();
+  openWelcome(true);
+  setStatus("New project. Pick a screen and a theme.");
+}
 function currentPage() {
   return state.pages.find((p) => p.gx === 0 && p.gy === 0) || state.pages[0];
 }
@@ -1487,6 +1538,8 @@ function bind() {
   };
   $("actNew").addEventListener("click", addScreen);
   $("actNewSide").addEventListener("click", addScreen);
+  $("actNewProject").addEventListener("click", startNewProject);
+  $("actNewProjectSide").addEventListener("click", startNewProject);
   $("actRename").addEventListener("click", () => {
     $("pageMenu").hidden = true;
     $("sessionTitle").focus();

@@ -27,6 +27,7 @@ The code that is live sits on the `gh-pages` branch of `xRealtimeEng/innovatered
 2. That writes `state` and hides the card.
 3. Desktop frames cover the window, top-left. Phone and tablet frames are drawn whole, with bezel, on the paper.
 4. Left drawer stays closed on a narrow screen so the canvas can boot. The workspace icon opens it.
+5. **New project** (Project menu, or Workspace → Page) asks first, then clears screens, paint, widgets, notes, and the background on this device and shows the welcome card again. **New screen** only adds a page. Export before a new project if the current one should be kept.
 
 ## State
 
