@@ -402,6 +402,12 @@ state.screen = state.screen || "desktop";
 state.layers = Object.assign({ widgets: true, paint: true, grid: true, labels: true, background: true }, state.layers || {});
 state.deviceId = state.deviceId || "desktop-1440";
 state.gridSize = state.gridSize || 12;
+state.paperGridSize = state.paperGridSize || 24;
+state.os = state.os || "none";
+state.homeButton = !!state.homeButton;
+state.layers = state.layers || {};
+if (state.layers.screenGrid === undefined) state.layers.screenGrid = state.layers.grid !== false;
+if (state.layers.paperGrid === undefined) state.layers.paperGrid = true;
 state.themeId = state.themeId || "light";
 state.theme = state.theme && state.theme.widgets ? state.theme : defaultTheme();
 defaultTheme().widgets.forEach((w) => {
@@ -532,6 +538,91 @@ function roundPath(ctx, x, y, w, h, r) {
   ctx.arcTo(x, y, x + w, y, rr);
   ctx.closePath();
 }
+function desktopChrome(fr) {
+  if (!fr || fr.family !== "desktop") return { top: 0, bottom: 0 };
+  if (state.os === "mac") return { top: 28, bottom: 0 };
+  if (state.os === "windows") return { top: 0, bottom: 40 };
+  return { top: 0, bottom: 0 };
+}
+function drawMenuBar(ctx, x, y, w, h) {
+  ctx.fillStyle = "rgba(246,246,246,0.94)";
+  ctx.fillRect(x, y, w, h);
+  ["#FF5F57", "#FEBC2E", "#28C840"].forEach((color, i) => {
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x + 16 + i * 16, y + h / 2, 5, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.fillStyle = "#1A1B22";
+  ctx.font = "600 12px DM Sans, sans-serif";
+  ctx.fillText("Menu    File    Edit    View", x + 72, y + 18);
+}
+function drawTaskbar(ctx, x, y, w, h) {
+  ctx.fillStyle = "#0B1C2D";
+  ctx.fillRect(x, y, w, h);
+  ctx.fillStyle = "#C8102E";
+  roundPath(ctx, x + 10, y + 8, 24, 24, 4);
+  ctx.fill();
+  ctx.fillStyle = "#2A3439";
+  for (let i = 0; i < 4; i++) {
+    roundPath(ctx, x + 46 + i * 36, y + 8, 28, 24, 4);
+    ctx.fill();
+  }
+  ctx.fillStyle = "#C5CCD3";
+  ctx.font = "12px DM Sans, sans-serif";
+  ctx.fillText("12:00", x + w - 52, y + 25);
+}
+function drawSideButtons(ctx, x, y, fr, bezel) {
+  ctx.fillStyle = "#3A424C";
+  ctx.fillRect(x - bezel - 3, y + 90, 3, 28);
+  ctx.fillRect(x - bezel - 3, y + 128, 3, 46);
+  ctx.fillRect(x + fr.w + bezel, y + 110, 3, 64);
+}
+function closestDevice(width, height, model) {
+  const text = String(model || "");
+  let pool = DEVICES;
+  if (/ipad/i.test(text)) pool = DEVICES.filter((d) => d.family === "tablet" && /ipad/i.test(d.label));
+  else if (/iphone/i.test(text)) pool = DEVICES.filter((d) => /iphone/i.test(d.label));
+  else if (/pixel/i.test(text)) pool = DEVICES.filter((d) => /pixel/i.test(d.label));
+  else if (/sm-|samsung|galaxy/i.test(text)) pool = DEVICES.filter((d) => /galaxy/i.test(d.label));
+  if (!pool.length) pool = DEVICES;
+  return pool.slice().sort((a, b) => score(a) - score(b))[0];
+  function score(d) {
+    const turned = (height >= width) !== (d.h >= d.w) ? 4000 : 0;
+    return turned + Math.abs(d.w - width) + Math.abs(d.h - height);
+  }
+}
+async function detectDevice() {
+  const ok = window.confirm("Match the artboard to this device?\n\nThe browser may ask for platform details. This reads screen size and system name only. It does not read files, photos, or location.");
+  if (!ok) {
+    setStatus("Device match cancelled. Pick a screen under Page.");
+    return;
+  }
+  let platform = navigator.platform || "";
+  let model = "";
+  try {
+    if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+      const hints = await navigator.userAgentData.getHighEntropyValues(["platform", "model", "platformVersion"]);
+      platform = hints.platform || platform;
+      model = hints.model || "";
+    }
+  } catch (_) {
+    setStatus("Platform details were blocked. Matching from screen size.");
+  }
+  const blob = `${platform} ${navigator.userAgent || ""}`;
+  if (/win/i.test(blob)) state.os = "windows";
+  else if (/mac/i.test(blob)) state.os = "mac";
+  else state.os = "none";
+  const best = closestDevice(screen.width, screen.height, `${model} ${blob}`);
+  selectDevice(best.id);
+  markOs();
+  setStatus(`Matched ${best.label} from this browser (${screen.width}×${screen.height}). Not a hardware scan. Change it under Page.`);
+}
+function markOs() {
+  document.querySelectorAll("[data-os]").forEach((b) => b.classList.toggle("is-on", b.dataset.os === state.os));
+  const home = $("homeButton");
+  if (home) home.checked = !!state.homeButton;
+}
 function prepCanvases() {
   const { w, h } = worldSize();
   ink.width = paper.width = w;
@@ -541,26 +632,42 @@ function prepCanvases() {
   pctx.fillStyle = paperColor;
   pctx.fillRect(0, 0, w, h);
   const g = grid();
+  const darkPaper = (hexToRgb(paperColor)[0] + hexToRgb(paperColor)[1] + hexToRgb(paperColor)[2]) < 380;
+  if (state.layers.paperGrid !== false) {
+    const paperStep = Number(state.paperGridSize) || 24;
+    pctx.strokeStyle = darkPaper ? "rgba(255,255,255,0.08)" : "rgba(15,23,32,0.08)";
+    pctx.lineWidth = 1;
+    for (let gx = 0; gx < w; gx += paperStep) {
+      pctx.beginPath();
+      pctx.moveTo(gx, 0);
+      pctx.lineTo(gx, h);
+      pctx.stroke();
+    }
+    for (let gy = 0; gy < h; gy += paperStep) {
+      pctx.beginPath();
+      pctx.moveTo(0, gy);
+      pctx.lineTo(w, gy);
+      pctx.stroke();
+    }
+  }
   const step = Number(state.gridSize) || 12;
   state.pages.forEach((pg) => {
     const fr = frameOf(pg);
     const x = fr.x - g.ox;
     const y = fr.y - g.oy;
-    const bezel = fr.family === "desktop" ? 0 : 18;
+    const bezel = fr.family === "desktop" ? 0 : 22;
+    const chrome = desktopChrome(fr);
     pctx.fillStyle = "#1A1B22";
-    roundPath(pctx, x - bezel, y - bezel, fr.w + bezel * 2, fr.h + bezel * 2, (fr.radius || 16) + 6);
+    roundPath(pctx, x - bezel, y - bezel, fr.w + bezel * 2, fr.h + bezel * 2, (fr.radius || 16) + 8);
     pctx.fill();
-    if (fr.family === "desktop") {
-      pctx.fillStyle = "#0A0C0E";
-      pctx.fillRect(x, y, fr.w, 28);
-    }
+    if (fr.family !== "desktop") drawSideButtons(pctx, x, y, fr, bezel);
     pctx.fillStyle = paperColor;
-    roundPath(pctx, x, y + (fr.family === "desktop" ? 28 : 0), fr.w, fr.h - (fr.family === "desktop" ? 28 : 0), fr.family === "desktop" ? 0 : fr.radius || 16);
+    roundPath(pctx, x, y + chrome.top, fr.w, fr.h - chrome.top - chrome.bottom, fr.family === "desktop" ? 0 : fr.radius || 16);
     pctx.fill();
     const bg = state.backgrounds[pg.id];
     if (bg && state.layers.background !== false && bgCache[bg] && bgCache[bg].complete && bgCache[bg].naturalWidth) {
       pctx.save();
-      roundPath(pctx, x, y, fr.w, fr.h, fr.radius || 0);
+      roundPath(pctx, x, y + chrome.top, fr.w, fr.h - chrome.top - chrome.bottom, 0);
       pctx.clip();
       pctx.drawImage(bgCache[bg], x, y, fr.w, fr.h);
       pctx.restore();
@@ -570,20 +677,28 @@ function prepCanvases() {
       img.onload = () => prepCanvases();
       img.src = bg;
     }
-    if (fr.family === "phone") {
+    if (chrome.top) drawMenuBar(pctx, x, y, fr.w, chrome.top, state.os);
+    if (chrome.bottom) drawTaskbar(pctx, x, y + fr.h - chrome.bottom, fr.w, chrome.bottom);
+    if (fr.family === "phone" || (fr.family === "tablet" && !state.homeButton)) {
       pctx.fillStyle = "#111";
-      roundPath(pctx, x + fr.w / 2 - 42, y + 10, 84, 18, 9);
+      roundPath(pctx, x + fr.w / 2 - 42, y + 12, 84, 18, 9);
       pctx.fill();
-      roundPath(pctx, x + fr.w / 2 - 48, y + fr.h - 16, 96, 5, 3);
+      roundPath(pctx, x + fr.w / 2 - 48, y + fr.h - 18, 96, 5, 3);
       pctx.fill();
     }
-    if (state.layers.grid) {
-      const dark = (hexToRgb(paperColor)[0] + hexToRgb(paperColor)[1] + hexToRgb(paperColor)[2]) < 380;
+    if (fr.family === "tablet" && state.homeButton) {
+      pctx.strokeStyle = "#C5CCD3";
+      pctx.lineWidth = 2;
+      pctx.beginPath();
+      pctx.arc(x + fr.w / 2, y + fr.h + 11, 7, 0, Math.PI * 2);
+      pctx.stroke();
+    }
+    if (state.layers.screenGrid !== false) {
       pctx.save();
       pctx.beginPath();
-      pctx.rect(x, y, fr.w, fr.h);
+      pctx.rect(x, y + chrome.top, fr.w, fr.h - chrome.top - chrome.bottom);
       pctx.clip();
-      pctx.strokeStyle = dark ? "rgba(255,255,255,0.14)" : "rgba(15,23,32,0.16)";
+      pctx.strokeStyle = darkPaper ? "rgba(255,255,255,0.16)" : "rgba(15,23,32,0.16)";
       pctx.lineWidth = 1;
       for (let gx = x; gx < x + fr.w; gx += step) {
         pctx.beginPath();
@@ -602,7 +717,7 @@ function prepCanvases() {
     if (state.layers.labels) {
       pctx.fillStyle = tokens.text || "#5C5E6A";
       pctx.font = "600 22px DM Sans, sans-serif";
-      pctx.fillText(`${pg.title} · ${fr.label}`, x + 16, y + (fr.family === "desktop" ? 22 : 36));
+      pctx.fillText(`${pg.title} · ${fr.label}`, x + 16, y + chrome.top + 28);
     }
   });
   ink.style.display = state.layers.paint ? "block" : "none";
@@ -1251,7 +1366,10 @@ function bind() {
       state.welcomed = true;
       applyBuiltTheme(state.themeId || "light");
       openWelcome(false);
-      if (window.innerWidth > 820) $("leftDrawer").classList.add("is-open");
+      if (window.innerWidth > 820) {
+        $("leftDrawer").classList.add("is-open");
+        $("btnLeft").classList.add("is-on");
+      }
       prepCanvases();
       fitView();
       setStatus("Workspace open. Drag a template from the left drawer.");
@@ -1267,6 +1385,32 @@ function bind() {
     save();
     prepCanvases();
   });
+  if ($("paperGridSize")) {
+    $("paperGridSize").value = String(state.paperGridSize || 24);
+    $("paperGridSize").addEventListener("input", () => {
+      state.paperGridSize = Number($("paperGridSize").value);
+      save();
+      prepCanvases();
+    });
+  }
+  document.querySelectorAll("[data-os]").forEach((b) => {
+    b.addEventListener("click", () => {
+      state.os = b.dataset.os;
+      save();
+      markOs();
+      prepCanvases();
+      setStatus(state.os === "mac" ? "Mac menu bar on desktop frames." : state.os === "windows" ? "Windows taskbar on desktop frames." : "Plain desktop frame.");
+    });
+  });
+  if ($("homeButton")) {
+    $("homeButton").addEventListener("change", () => {
+      state.homeButton = $("homeButton").checked;
+      save();
+      prepCanvases();
+    });
+  }
+  if ($("btnDetect")) $("btnDetect").addEventListener("click", () => detectDevice());
+  markOs();
   document.querySelectorAll("[data-token]").forEach((b) => {
     b.addEventListener("click", () => {
       state.theme.tokens[b.dataset.token] = $("inkColor").value;
@@ -1283,15 +1427,18 @@ function bind() {
   $("btnPages").addEventListener("click", (e) => {
     e.stopPropagation();
     $("pageMenu").hidden = !$("pageMenu").hidden;
+    $("btnPages").classList.toggle("is-on", !$("pageMenu").hidden);
   });
   $("btnLeft").addEventListener("click", () => {
     const open = !$("leftDrawer").classList.contains("is-open");
     $("leftDrawer").classList.toggle("is-open", open);
+    $("btnLeft").classList.toggle("is-on", open);
     if (window.innerWidth <= 820) $("dim").hidden = !open;
   });
   $("btnRight").addEventListener("click", () => {
     const open = !$("rightDrawer").classList.contains("is-open");
     $("rightDrawer").classList.toggle("is-open", open);
+    $("btnRight").classList.toggle("is-on", open);
     if (window.innerWidth <= 820) $("dim").hidden = !open;
   });
   $("dim").addEventListener("click", () => {
@@ -1508,7 +1655,10 @@ try {
   fitView();
   renderPieces();
   syncCursor();
-  if (window.innerWidth > 820 && state.welcomed) $("leftDrawer").classList.add("is-open");
+  if (window.innerWidth > 820 && state.welcomed) {
+    $("leftDrawer").classList.add("is-open");
+    $("btnLeft").classList.add("is-on");
+  }
   requestAnimationFrame(() => fitView());
 } catch (err) {
   const status = document.getElementById("status");

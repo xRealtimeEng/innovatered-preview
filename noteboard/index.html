@@ -33,9 +33,13 @@
   </div>
   <div id="studio" class="app">
     <header class="rps-topbar">
-      <button type="button" id="btnLeft" class="icon-btn" aria-label="Toggle screens">☰</button>
+      <button type="button" id="btnLeft" class="icon-btn" aria-label="Workspace" title="Workspace">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v16H4zM13 4h7v7h-7zM13 13h7v7h-7z" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
       <div class="menu-wrap">
-        <button type="button" id="btnPages" class="icon-btn" aria-label="Project menu">≡</button>
+        <button type="button" id="btnPages" class="icon-btn" aria-label="Project" title="Project">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h6l2 2H21V19H3z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        </button>
         <div id="pageMenu" class="project-menu" hidden>
           <p class="menu-kicker">Project</p>
           <button type="button" id="actNew">New screen</button>
@@ -63,10 +67,21 @@
         <input id="widgetSearch" type="search" placeholder="Search widgets…" />
       </label>
       <span class="sku-badge">Working</span>
-      <button type="button" id="btnFit" class="icon-btn" title="Fit screen">⌂</button>
-      <button type="button" id="btnUndo" class="icon-btn" title="Undo">↺</button>
-      <button type="button" id="btnMax" class="icon-btn" title="Full screen">⛶</button>
-      <button type="button" id="btnRight" class="icon-btn" title="Inspector">▣</button>
+      <button type="button" id="btnDetect" class="icon-btn" title="Match this device" aria-label="Match this device">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H4v4M16 3h4v4M8 21H4v-4M16 21h4v-4" fill="none" stroke="currentColor" stroke-width="1.7"/><rect x="9" y="7" width="6" height="10" rx="1.2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <button type="button" id="btnFit" class="icon-btn" title="Fit screen" aria-label="Fit screen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <button type="button" id="btnUndo" class="icon-btn" title="Undo" aria-label="Undo">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 8H4v4M4.5 12a8 8 0 1 0 2-5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <button type="button" id="btnMax" class="icon-btn" title="Full screen" aria-label="Full screen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>
+      </button>
+      <button type="button" id="btnRight" class="icon-btn" title="Inspector" aria-label="Inspector">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h10M4 17h16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><circle cx="16" cy="12" r="2" fill="currentColor"/></svg>
+      </button>
     </header>
 
     <div class="workspace">
@@ -80,9 +95,19 @@
             <summary>Page</summary>
             <p class="hint">The device is drawn on the page. Grid starts small.</p>
             <div id="deviceKit" class="device-kit"></div>
-            <label class="slider">Grid size <input id="gridSize" type="range" min="8" max="32" value="12" /></label>
+            <p class="section-label">Desktop chrome</p>
+            <div class="device-row" id="osKit">
+              <button type="button" data-os="mac">Mac bar</button>
+              <button type="button" data-os="windows">Windows bar</button>
+              <button type="button" data-os="none">Plain</button>
+            </div>
+            <label class="check"><input id="homeButton" type="checkbox" /> Tablet home button</label>
+            <p class="section-label">Grids</p>
+            <label class="check"><input type="checkbox" data-layer="screenGrid" checked /> Screen grid</label>
+            <label class="slider">Screen size <input id="gridSize" type="range" min="8" max="48" value="12" /></label>
+            <label class="check"><input type="checkbox" data-layer="paperGrid" checked /> Paper grid</label>
+            <label class="slider">Paper size <input id="paperGridSize" type="range" min="8" max="64" value="24" /></label>
             <div class="layers">
-              <label><input type="checkbox" data-layer="grid" checked /> Grid</label>
               <label><input type="checkbox" data-layer="widgets" checked /> Widgets</label>
               <label><input type="checkbox" data-layer="paint" checked /> Paint</label>
               <label><input type="checkbox" data-layer="labels" checked /> Labels</label>
