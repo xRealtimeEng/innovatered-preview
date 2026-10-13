@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1c2d" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>GeOS</title>
+  <style>
+    :root {
+      --red: #c8102e;
+      --navy: #0b1c2d;
+      --ink: #fff;
+      --body: #d9d9d9;
+      --muted: #a6a6a6;
+      --surface: #122536;
+      --line: rgba(200, 16, 46, 0.45);
+      --sans: "Segoe UI", system-ui, sans-serif;
+      --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; background: var(--navy); color: var(--body); font-family: var(--sans); }
+    body { min-height: 100dvh; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    .shell { max-width: 32rem; margin: 0 auto; min-height: 100dvh; display: flex; flex-direction: column; }
+    header, footer { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; padding-top: calc(0.85rem + env(safe-area-inset-top)); border-bottom: 1px solid var(--line); }
+    footer { border-bottom: 0; border-top: 1px solid var(--line); padding-bottom: calc(0.85rem + env(safe-area-inset-bottom)); }
+    .mark { margin: 0; color: var(--red); font-family: var(--mono); letter-spacing: 0.28em; font-size: 0.75rem; }
+    .sub { margin: 0; color: var(--muted); font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+    main { flex: 1; padding: 1rem; }
+    h1 { margin: 0 0 0.35rem; color: var(--ink); font-size: 1.7rem; font-weight: 600; }
+    p { margin: 0; line-height: 1.45; }
+    .row { display: flex; gap: 0.5rem; margin-top: 0.85rem; }
+    .btn { min-height: 44px; border: 1px solid var(--red); background: transparent; color: var(--ink); padding: 0 0.8rem; }
+    .btn.primary { background: var(--red); color: #fff; flex: 1; }
+    .status { margin-top: 0.75rem; padding: 0.75rem 0.85rem; border-left: 3px solid var(--red); background: var(--surface); color: var(--body); font-family: var(--mono); font-size: 0.78rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 0.85rem; }
+    .card { border: 1px solid var(--line); background: var(--surface); padding: 0.7rem 0.75rem; }
+    .card span { display: block; color: var(--red); font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; }
+    .card strong { display: block; margin-top: 0.3rem; color: var(--ink); font-family: var(--mono); font-weight: 500; font-variant-numeric: tabular-nums; font-size: 0.95rem; word-break: break-all; }
+    .wide { grid-column: 1 / -1; }
+    canvas { width: 100%; height: 220px; margin-top: 0.85rem; border: 1px solid var(--line); background: #0b1c2d; display: block; }
+    video { width: 100%; max-height: 240px; margin-top: 0.5rem; background: #1a1f24; object-fit: cover; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header>
+      <p class="mark">GEOS</p>
+      <p class="sub">RED</p>
+    </header>
+    <main>
+      <h1>Phone sensors</h1>
+      <p>This page reads this handset. Open it in Safari or Chrome, not inside another frame. Tap once so the phone can show the permission prompts.</p>
+      <div class="row">
+        <button class="btn primary" id="arm" type="button">Read this phone</button>
+        <button class="btn" id="cam" type="button">Camera</button>
+      </div>
+      <p class="status" id="status">Sensors are off until you tap.</p>
+      <div class="grid" id="grid"></div>
+      <canvas id="track" width="640" height="440" aria-label="Walk track"></canvas>
+      <video id="video" class="hidden" playsinline muted></video>
+    </main>
+    <footer>
+      <p class="sub">Local only</p>
+      <p class="sub" id="clock"></p>
+    </footer>
+  </div>
+  <script>
+    const statusEl = document.getElementById("status");
+    const grid = document.getElementById("grid");
+    const canvas = document.getElementById("track");
+    const video = document.getElementById("video");
+    const clock = document.getElementById("clock");
+    const fields = {};
+    const track = [];
+    let watchId = null;
+    let lastFix = null;
+
+    const LABELS = [
+      ["secure", "Secure page"],
+      ["frame", "Frame"],
+      ["fix", "Last GPS"],
+      ["lat", "Latitude"],
+      ["lon", "Longitude"],
+      ["acc", "Accuracy"],
+      ["alt", "Altitude"],
+      ["speed", "Speed"],
+      ["course", "GPS course"],
+      ["ax", "Accel X"],
+      ["ay", "Accel Y"],
+      ["az", "Accel Z"],
+      ["am", "Accel magnitude"],
+      ["rx", "Gyro X"],
+      ["ry", "Gyro Y"],
+      ["rz", "Gyro Z"],
+      ["head", "Compass"],
+      ["pitch", "Pitch"],
+      ["roll", "Roll"],
+      ["bat", "Battery"],
+      ["link", "Network"],
+    ];
+
+    for (const [key, label] of LABELS) {
+      const card = document.createElement("article");
+      card.className = "card" + (key === "fix" || key === "secure" || key === "frame" ? " wide" : "");
+      const span = document.createElement("span");
+      span.textContent = label;
+      const strong = document.createElement("strong");
+      strong.textContent = "—";
+      strong.id = "f-" + key;
+      card.append(span, strong);
+      grid.append(card);
+      fields[key] = strong;
+    }
+
+    function setField(key, value) {
+      fields[key].textContent = value == null || value === "" ? "—" : String(value);
+    }
+
+    function n(value, digits, unit) {
+      if (value == null || Number.isNaN(value)) return null;
+      return value.toFixed(digits) + (unit || "");
+    }
+
+    function say(text) {
+      statusEl.textContent = text;
+    }
+
+    function draw() {
+      const ctx = canvas.getContext("2d");
+      const w = canvas.width;
+      const h = canvas.height;
+      ctx.fillStyle = "#0b1c2d";
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= w; x += 40) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+      }
+      for (let y = 0; y <= h; y += 40) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+      }
+      if (!track.length) return;
+      const origin = track[0];
+      const xy = track.map((p) => toLocal(p, origin));
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+      xy.forEach((p) => {
+        minX = Math.min(minX, p.x); maxX = Math.max(maxX, p.x);
+        minY = Math.min(minY, p.y); maxY = Math.max(maxY, p.y);
+      });
+      const span = Math.max(maxX - minX, maxY - minY, 20);
+      const scale = Math.min((w - 24) / span, (h - 24) / span);
+      const cx = (minX + maxX) / 2;
+      const cy = (minY + maxY) / 2;
+      const proj = (p) => ({ sx: w / 2 + (p.x - cx) * scale, sy: h / 2 - (p.y - cy) * scale });
+      ctx.strokeStyle = "#c8102e";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      xy.forEach((p, i) => {
+        const q = proj(p);
+        if (i === 0) ctx.moveTo(q.sx, q.sy); else ctx.lineTo(q.sx, q.sy);
+      });
+      ctx.stroke();
+      const last = proj(xy[xy.length - 1]);
+      ctx.fillStyle = "#fff";
+      ctx.beginPath();
+      ctx.arc(last.sx, last.sy, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    function toLocal(p, o) {
+      const r = 6378137;
+      return {
+        x: ((p.lon - o.lon) * Math.PI) / 180 * r * Math.cos((o.lat * Math.PI) / 180),
+        y: ((p.lat - o.lat) * Math.PI) / 180 * r,
+      };
+    }
+
+    function onFix(pos) {
+      const c = pos.coords;
+      lastFix = { lat: c.latitude, lon: c.longitude, at: Date.now() };
+      setField("fix", new Date(pos.timestamp || Date.now()).toLocaleTimeString());
+      setField("lat", c.latitude.toFixed(6));
+      setField("lon", c.longitude.toFixed(6));
+      setField("acc", n(c.accuracy, 0, " m"));
+      setField("alt", c.altitude == null ? null : n(c.altitude, 1, " m"));
+      setField("speed", c.speed == null || c.speed < 0 ? null : n(c.speed, 2, " m/s"));
+      setField("course", c.heading == null || c.heading < 0 ? null : n(c.heading, 0, "°"));
+      const prev = track[track.length - 1];
+      if (!prev || Date.now() - prev.at > 3000) {
+        track.push({ lat: c.latitude, lon: c.longitude, at: Date.now() });
+        if (track.length > 800) track.shift();
+        draw();
+      }
+      say("GPS is reporting from this phone.");
+    }
+
+    function onFixError(err) {
+      const name = err && err.code === 1 ? "Permission denied" : err && err.code === 2 ? "Position unavailable" : err && err.code === 3 ? "Timed out" : "GPS error";
+      say(name + (err && err.message ? " — " + err.message : "") + " Allow location for this site in the phone settings, then tap again.");
+    }
+
+    function onMotion(event) {
+      const a = event.accelerationIncludingGravity;
+      if (a) {
+        setField("ax", n(a.x, 2, " m/s²"));
+        setField("ay", n(a.y, 2, " m/s²"));
+        setField("az", n(a.z, 2, " m/s²"));
+        if (a.x != null && a.y != null && a.z != null) setField("am", n(Math.hypot(a.x, a.y, a.z), 2, " m/s²"));
+      }
+      const r = event.rotationRate;
+      if (r) {
+        setField("rx", n(r.alpha, 1, "°/s"));
+        setField("ry", n(r.beta, 1, "°/s"));
+        setField("rz", n(r.gamma, 1, "°/s"));
+      }
+    }
+
+    function onOrient(event) {
+      const compass = event.webkitCompassHeading;
+      setField("head", compass != null ? n(compass, 0, "°") : n(event.alpha, 0, "°"));
+      setField("pitch", n(event.beta, 0, "°"));
+      setField("roll", n(event.gamma, 0, "°"));
+    }
+
+    function arm() {
+      if (!window.isSecureContext) {
+        say("This page is not a secure context. Sensors stay blocked. Open the https dev link.");
+        return;
+      }
+      if (window.top !== window) {
+        say("This page is inside a frame. The phone will refuse GPS and motion. Open the link in Safari or Chrome.");
+      }
+      if (!navigator.geolocation) {
+        say("This browser has no geolocation API.");
+      } else if (watchId == null) {
+        watchId = navigator.geolocation.watchPosition(onFix, onFixError, {
+          enableHighAccuracy: true,
+          maximumAge: 1000,
+          timeout: 20000,
+        });
+        say("Asked this phone for GPS. Accept the prompt.");
+      }
+      const motion = window.DeviceMotionEvent;
+      const orient = window.DeviceOrientationEvent;
+      const asks = [];
+      if (motion && typeof motion.requestPermission === "function") asks.push(motion.requestPermission());
+      if (orient && typeof orient.requestPermission === "function") asks.push(orient.requestPermission());
+      window.addEventListener("devicemotion", onMotion);
+      window.addEventListener("deviceorientation", onOrient);
+      if (asks.length) {
+        Promise.all(asks).then((results) => {
+          say("Sensor permission: " + results.join(", ") + ". Walk outside if GPS is still waiting.");
+        }).catch((err) => {
+          say("Motion permission failed — " + (err && err.message ? err.message : "denied") + ".");
+        });
+      }
+      if (navigator.getBattery) {
+        navigator.getBattery().then((battery) => {
+          const paint = () => setField("bat", Math.round(battery.level * 100) + "%" + (battery.charging ? " charging" : ""));
+          paint();
+          battery.addEventListener("levelchange", paint);
+          battery.addEventListener("chargingchange", paint);
+        }).catch(() => setField("bat", "not exposed"));
+      } else {
+        setField("bat", "not exposed");
+      }
+    }
+
+    async function openCamera() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+        video.classList.remove("hidden");
+        video.srcObject = stream;
+        await video.play();
+      } catch (err) {
+        say("Camera refused — " + (err && err.message ? err.message : "blocked") + ".");
+      }
+    }
+
+    function paintLink() {
+      const c = navigator.connection;
+      const parts = [];
+      if (typeof navigator.onLine === "boolean") parts.push(navigator.onLine ? "online" : "offline");
+      if (c && c.type) parts.push(c.type);
+      if (c && c.effectiveType) parts.push(c.effectiveType);
+      setField("link", parts.join(" · ") || "—");
+    }
+
+    setField("secure", window.isSecureContext ? "yes" : "no — sensors blocked");
+    setField("frame", window.top === window ? "top level" : "framed — open in the browser");
+    paintLink();
+    window.addEventListener("online", paintLink);
+    window.addEventListener("offline", paintLink);
+    document.getElementById("arm").addEventListener("click", arm);
+    document.getElementById("cam").addEventListener("click", openCamera);
+    setInterval(() => { clock.textContent = new Date().toLocaleTimeString(); }, 1000);
+    clock.textContent = new Date().toLocaleTimeString();
+    draw();
+  </script>
+</body>
+</html>
